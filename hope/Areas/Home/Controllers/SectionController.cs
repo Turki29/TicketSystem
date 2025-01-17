@@ -96,11 +96,7 @@ namespace TicketSystem.Areas.Home.Controllers
         public IActionResult AddUser(UserSections usersection)
         {
             UserSections usersectionChecker;
-            if (IsSectionAdmin(usersection.UserId))
-            {
-                usersectionChecker = _db.UserSections.FirstOrDefault(u => u.UserId == usersection.UserId);
-                if(usersectionChecker != null) return Redirect("/Home/Home/Error");
-            }
+           
 
 
             Section section = _db.Sections.FirstOrDefault(u => u.Id == usersection.SectionId);

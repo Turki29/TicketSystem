@@ -1,0 +1,10 @@
+﻿@model List<IdentityUserVM>
+<option selected disabled>
+    -اختر مستخدم-
+</option>
+@foreach (IdentityUserVM user in Model)
+{
+    <option value="@user.Id">
+        @user.Email
+    </option>
+}

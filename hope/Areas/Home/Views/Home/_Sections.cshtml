@@ -1,0 +1,26 @@
+﻿@model List<Section>
+
+@{
+    int selected;
+    if (string.IsNullOrEmpty(ViewData["selectedSection"].ToString()))
+        selected = 0;
+    else
+        selected = Convert.ToInt32(ViewData["selectedSection"]);
+}
+
+    @foreach(Section section1 in Model)
+    {
+        if (selected == section1.Id)
+        {
+            <option value="@section1.Id" selected>
+                @section1.Name
+            </option>
+        }
+        else
+        {
+            <option value="@section1.Id">
+                @section1.Name
+            </option>
+        }
+    
+    }

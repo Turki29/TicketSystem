@@ -1,0 +1,27 @@
+﻿@model TechnicalsVM
+
+
+@if(Model.SelectedTech != null)
+{
+    <option disabled>-اختر تقنيًا-</option>
+}
+else
+{
+    <option selected disabled>-اختر تقنيًا-</option>
+}
+@foreach(SelectListItem listItem in Model.Technicians)
+{
+
+    if(listItem.Value == Model.SelectedTech)
+    {
+        <option value="@listItem.Value" selected>@listItem.Text</option>
+    }
+    else
+    {
+        <option value="@listItem.Value">@listItem.Text</option>
+    }
+    
+}
+
+
+ 

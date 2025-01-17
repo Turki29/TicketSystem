@@ -1,0 +1,114 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using Utility
+@model IEnumerable<IdentityUserVM>
+@{
+    ViewData["title"] = "أعضاء القسم";
+   
+
+}
+<div class="d-flex justify-content-lg-between m-3" style="flex-wrap: wrap;">
+
+
+        <a class="btn  btn-info m-3  " asp-action="AddUser" >
+            أضف عضوا
+        </a>
+
+</div>
+
+
+<div style="margin: 50px;" class="">
+
+
+
+    @foreach (IdentityUserVM user in Model)
+        {
+
+        <div class="bg-dark  text-white d-flex techCard d-flex justify-content-between" style="min-height: 100px; padding: 5px; border-radius: 5px;margin: 5px;">
+
+
+            <div class="p-1">
+
+
+
+                <div>@user.Email</div>
+                <div>@StaticData.GetArabicRole(user.RoleName)</div>
+                <div>@ViewData["sectionName"]</div>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center text-white text-center mx-3">
+                <div class="d-flex justify-content-center align-items-center text-white text-center mx-3 p-3">
+                    <button class="btn btn-danger" onclick="SwalAlert('@user.Id', '@ViewData["section"]')">
+                        <i class="bi bi-trash3 "></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+        
+        }
+
+
+</div>
+
+
+<script>
+
+    function SwalAlert(userId, sectionId) {
+  
+        
+        Swal.fire({
+            title: "متأكد؟",
+            text: "لا تراجع بعد هذا!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            cancelButtonText: "ألغ",
+            confirmButtonText: "نعم، احذفها!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                fetch(
+                    window.location.origin + "/Home/Section/DeleteUserFromSection?userId=" + userId + "&sectionId=" + sectionId,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                        // لا حاجة لإضافة body هنا
+                    }
+                )
+                    .then(response => {
+                        if (response.ok) {
+                            // إعادة التوجيه إلى الصفحة بعد الحذف بنجاح
+                            window.location.href = window.location.origin + '/Home/section?section=' + sectionId;
+                        } else {
+                            return response.json().then(errorData => {
+                                // التعامل مع الأخطاء المرسلة من الخادم (إن وجدت)
+                                throw new Error(errorData.message || "خطأ أثناء الحذف");
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: "حصل خطأ!",
+                            text: error.message || "لم تحذف التذكرة.",
+                            icon: "error",
+                            footer: "<a href='#' class='text-info'>تواصل معنا</a>"
+                        });
+                    });
+            }
+        });
+
+
+
+
+
+
+    }
+        
+
+       
+  
+</script>

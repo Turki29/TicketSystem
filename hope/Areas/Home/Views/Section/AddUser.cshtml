@@ -1,0 +1,33 @@
+﻿@model UserSections
+@{
+    ViewData["title"] = "إضافة مستخدم للقسم";
+}
+<form  method="post" enctype="multipart/form-data">
+    <label class="mt-3"> المستخدم المضاف</label>
+    <select id="users" class="form-select" asp-for="@Model.UserId">
+       
+
+
+
+    </select>
+    <label class="mt-3"> القسم المضاف إليه</label>
+    <select id="sections" class="form-select " asp-for="@Model.SectionId">
+    </select>
+
+
+    <button type="submit" class="btn btn-info mt-3">أضف المستخدم</button>
+
+</form>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+
+
+        $("#users").load('/Home/Section/PartialGetUsers?section=@ViewData["section"]');
+            $("#sections").load("/Home/Home/PartialSections")
+        });
+    
+    
+
+    </script>

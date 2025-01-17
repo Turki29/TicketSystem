@@ -1,0 +1,52 @@
+﻿@model Ticket
+
+
+<h1 class="text-center m-5">فتح تذكرة جديدة</h1>
+
+
+
+<form method="post" enctype="multipart/form-data" class="m-5">
+    <fieldset>
+        <legend>بيانات التذكرة</legend>
+
+        
+
+        <input asp-for="@Model.SectionId" hidden />
+
+
+        <div class="">
+            <label for="problemDesription" class="form-label mt-4 ">تفاصيل التذكرة</label>
+            <textarea asp-for="@Model.ProblemDescription" class="form-control" id="problemDesription" placeholder="أدخل تفاصيل التذكرة" rows="3"></textarea>
+             
+            <span class="text-danger" asp-validation-for="@Model.ProblemDescription"></span>
+        </div>
+
+        <fieldset>
+
+
+            <label class="m-1"> صور التذكرة</label>
+
+
+            <input class="form-control m-1" type="file" id="file" name="file" accept="image/png">
+
+            
+
+        </fieldset>
+
+
+
+
+        <a  class="btn btn-primary mt-4" asp-action="Index">ارجع للواجهة</a>
+        <button type="submit" class="btn btn-info   mt-4" style="color: white;" >افتح التذكرة</button>
+    </fieldset>
+</form>
+
+
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+
+    
+
+}

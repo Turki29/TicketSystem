@@ -1,0 +1,127 @@
+﻿@using System.Security.Claims
+@using Utility
+@model IEnumerable<Ticket>
+@{
+    ViewData["title"] = "جدول التذاكر قسم" + ViewData["sectionName"];
+
+    string ArabicSincePhrase(DateTime? ticketDate, string pre = "منذ", string now_pre = "")
+    {
+
+
+        if (ticketDate == null) return "--";
+
+
+        TimeSpan span = DateTime.Now - ticketDate.Value;
+
+        pre = pre + " ";
+
+        if (span.Days >= 1) return pre + StaticData.GetCountable(span.Days, "يوم", "يومين", "أيام");
+        else if (span.Hours >= 1) return pre + StaticData.GetCountable(span.Hours, "ساعة", "ساعتين", "ساعات");
+        else if (span.Minutes >= 1) return pre + StaticData.GetCountable(span.Minutes, "دقيقة", "دقيقتين", "دقائق");
+        else  return StaticData.GetCountable(span.Minutes, "دقيقة", "دقيقتين", "دقائق");
+        
+    }
+}
+
+
+
+<div class="d-flex justify-content-lg-between m-3" style="flex-wrap: wrap;">
+    @if (User.IsUser())
+    {
+
+        
+           
+       
+        <a class="btn  btn-primary m-3  " asp-action="Insert" asp-route-section="@ViewData["section"]">
+            افتح تذكرة
+        </a>
+        
+    }
+
+    @if (User.IsSystemAdmin())
+    {
+
+        
+           
+       
+        <a class="btn  btn-info m-3  " asp-action="Index" asp-controller="section" asp-route-section="@ViewData["section"]">
+            أظهر أعضاء القسم
+        </a>
+        
+    }
+    
+
+    <div class="btn-group m-3" role="group" aria-label="Basic radio toggle button group">
+        
+        
+        <a class="btn btn-dark m-1" asp-action="TicketsView" asp-route-status="new" asp-route-section="@ViewData["section"]"> كل التذاكر الجديدة</a>
+        @if(User.IsTechnician())
+        {
+            <a class="btn btn-dark  m-1" asp-action="TicketsView" asp-route-filter="techtickets" asp-route-section="@ViewData["section"]"> التذاكر المسندة لي</a>
+            <a class="btn btn-dark  m-1" asp-action="TicketsView" asp-route-filter="notassigned" asp-route-section="@ViewData["section"]"> التذاكر غير المسندة</a>
+        }
+        <a class="btn btn-dark  m-1" asp-action="TicketsView" asp-route-status="closed" asp-route-section="@ViewData["section"]"> التذاكر المغلقة</a>
+        
+    </div>
+
+</div>
+
+
+<table class="table m-3">
+    <thead class="table-dark"> 
+    <th>رقم التذكرة</th>
+    <th>تاريخ الإنشاء</th>
+    <th>الحالة</th>
+    <th>تاريخ الانتهاء</th>
+        @if (User.IsDepartment())
+        {
+        <th>القائم على التذكرة</th>
+        }
+
+    <th></th>
+    </thead>
+
+    <tbody>
+
+       @foreach(Ticket ticket in Model)
+        {
+            <tr class="table-primary">
+                <td>@ticket.Id</td>
+                <td> @ArabicSincePhrase(ticket.CreatedAt)</td>
+                <td>@ticket.Status</td>
+                <td> @ArabicSincePhrase(ticket.ClosedAt)</td>
+
+
+
+
+                @if ((User.IsDepartment()) && ticket.TechnicalIdentityUser != null)
+                 {
+                    <td>@ticket.TechnicalIdentityUser.Email</td>
+                 }
+                else if (User.IsTechnician())
+                {
+                    <td>
+                        <a class="btn btn-dark m-1" asp-action="Assign" asp-route-id="@ticket.Id" asp-route-techId="@User.GetUserId()">أسندها إلي</a>
+                    </td>
+                }
+                else if (User.IsSectionAdmin())
+                {
+                    <td> لم تسند لأحد</td>
+                }
+                    
+        
+               
+                <td >
+                    <div class="d-flex flex-lg-wrap">
+                        <a class="btn btn-info m-1" asp-action="Details" asp-route-Id="@ticket.Id"><i class="bi bi-info-circle-fill"></i></a>
+   
+                    </div>
+                    
+                </td>
+            </tr>
+        }
+
+
+       
+    </tbody>
+</table>

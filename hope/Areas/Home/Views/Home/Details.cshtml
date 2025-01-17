@@ -1,0 +1,232 @@
+﻿@model Ticket
+@{
+    ViewData["title"] = "تفاصيل التذكرة " + Model.Id;
+}
+
+<h1 class="text-center m-5">تفاصيل التذكرة</h1>
+
+<form  method="post" enctype="multipart/form-data">
+    <div class="m-5">
+
+        <input type="type" hidden asp-for="@Model.Id" />
+
+
+        <fieldset>
+            <label class="m-1"> مرسل التذكرة</label>
+            <input class="form-control" asp-for="@Model.SenderIdentityUser.UserName" readonly disabled />
+            @if (User.IsSectionAdmin())
+            {
+                <div class="mt-3">
+                    <label class="m-1"> القائم على التذكرة</label>
+
+
+                    <select id="technician-select"
+                    class="form-select "
+                    asp-for="@Model.TechnicalIdentityUserId">
+                    </select>
+
+                </div>
+
+                <script>
+                    $("#technician-select").load("/Home/Home/PartialAssignedTech?assignedTicketTech=@Model.TechnicalIdentityUserId"+ "&section=@Model.SectionId")
+                </script>
+
+                <div class="mt-3">
+
+
+                    <label> وزن التذكرة</label>
+                    <input class="form-control" type="tel" asp-for="@Model.RelativeWeight" />
+
+                </div>
+
+                <div class="mt-3">
+
+
+                    <label> قسم التذكرة</label>
+                     <select id="sections"
+                    class="form-select" 
+                     asp-for="@Model.SectionId"
+                     
+                     >
+
+                    </select>
+
+                </div>
+
+
+                <script>
+                    $("#sections").load("/Home/Home/PartialSections?selectedSection=@Model.SectionId")
+                </script>
+
+
+            }
+            else
+            {
+                <label for="TicketSection" class="mt-3">قسم التذكرة</label>
+                <input class="form-control mt-3" asp-for="@Model.Section.Name" readonly disabled />
+
+            }
+
+
+            @if (User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
+            {
+                <label for="TicketStatus" class="mt-3">حالة التذكرة</label>
+
+
+
+                <select class="form-select" asp-for="@Model.Status">
+
+                    <option value="new">
+                        جديدة
+                    </option>
+                    <option value="closed">
+                        مغلقة
+                    </option>
+
+                </select>
+            }
+            else
+            {
+                <input class="form-control mt-3" asp-for="@Model.Status" readonly disabled />
+            }
+
+            
+
+        </fieldset>
+
+        <label for="problemDescription" class="mt-3">تفاصيل التذكرة</label>
+        <textarea class="form-control" 
+        id="problemDescription" 
+        rows="3" 
+        readonly disabled 
+        asp-for="@Model.ProblemDescription">
+
+        </textarea>
+
+        <div class="mt-3">
+
+            <label for="TechnicalResponseDate">تاريخ رد التذكرة</label>
+            <input class="form-control" id="TechnicalResponseDate"
+            disabled readonly
+                      asp-for="@Model.TechResponseAt" placeholder="لم يرد التقني بعد"/>
+            <span asp-validation-for="@Model.TechResponseAt"
+            ></span>
+        </div>
+
+        @if (User.GetUserId() == Model.TechnicalIdentityUserId)
+        {
+            <div class="mt-3">
+
+                <label for="TechnicalResponse">رد التذكرة</label>
+                <textarea class="form-control" id="TechnicalResponse" rows="3"
+                          asp-for="@Model.TechnicalResponse" placeholder="لم يرد التقني بعد"></textarea>
+                <span asp-validation-for="@Model.TechnicalResponse"></span>
+            </div>
+        }
+        else
+        {
+            <div class="mt-3">
+
+                <label for="TechnicalResponse">رد التذكرة</label>
+                <textarea class="form-control" id="TechnicalResponse" rows="3"
+                          asp-for="@Model.TechnicalResponse"
+                          placeholder="لم يرد التقني بعد"
+                          readonly disabled></textarea>
+                <span asp-validation-for="@Model.TechnicalResponse"></span>
+            </div>
+        }
+
+
+        <div class="mt-3">
+            <label>
+                الصورة المرفقة
+            </label>
+
+            <div>
+                <img src='@Url.Action("GetImage", new {imageName = Model.TicketImageAttachmentPath})'
+                     class="mx-5 mb-5"
+                     style="width: 50%;"
+                     alt='بلا مرفقات' />
+            </div>
+        </div>
+        <a class="btn btn-primary mt-4" asp-action="TicketsView" asp-route-section='@Model.SectionId'>ارجع للواجهة</a>
+        @if(User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
+        {
+            <button type="submit" class="btn btn-info mt-4">حدّث التذكرة</button>
+        }
+
+        @if (User.IsSectionAdmin() || User.IsUser())
+        {
+            <a  onclick="SwalAlert()" class="btn btn-danger mt-4">حذف</a>
+
+        }
+    </div>
+
+</form>
+
+
+
+    <script>
+
+        function SwalAlert() {
+            Swal.fire({
+                title: "متأكد؟",
+                text: "لا تراجع بعد هذا!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                cancelButtonText: "ألغ",
+                confirmButtonText: "نعم، احذفها!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    fetch(
+                        window.location.origin + "/Home/Home/Delete?Id=@Model.Id",
+                        {
+                            method: "POST",
+                            headers:
+                            {
+                                "Content-Type": "application/json"
+
+                            },
+                            body: JSON.stringify({ Id: @Model.Id})
+                        }
+                    )
+                    .then(response => { 
+                    
+                        if (response.ok) {
+
+                          window.location.href = window.location.origin + '/Home/Home/TicketsView?section=@Model.SectionId';
+
+                        }
+                        else
+                        {
+                            throw new Error("خطأ أثناء الحذف")
+                        }
+                    
+                    })
+                    
+                    .catch(error => { 
+                    
+                        Swal.fire({
+                            title: "حصل خطأ!",
+                            text: "لم تحذف التذكرة.",
+                            icon: "error",
+                            footer: "<a href='#' class='text-info'>تواصل معنا</a>"
+                        });
+                    
+                    })
+                
+                   
+
+                    
+                }
+            });
+        }
+           
+        
+    </script>
+
+
+

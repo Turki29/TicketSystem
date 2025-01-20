@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data;
+using System.Reflection.Emit;
 using TicketSystem.Models;
 
 namespace TicketSystem.Data
@@ -25,17 +27,17 @@ namespace TicketSystem.Data
         [ValidateNever]
         public DbSet<UserSections> UserSections { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+       
+
+
+        protected override void OnModelCreating(ModelBuilder builder)
         {
+            base.OnModelCreating(builder);
 
-            base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<UserSections>()
+            builder.Entity<UserSections>()
                 .HasKey(us => new { us.UserId, us.SectionId });
 
-
         }
-
 
     }
 }

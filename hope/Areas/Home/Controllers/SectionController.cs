@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TicketSystem.Data;
 using TicketSystem.Models;
 using TicketSystem.Models.ViewModels;
@@ -27,9 +28,14 @@ namespace TicketSystem.Areas.Home.Controllers
                 return NotFound();
             }
 
-            List<IdentityUserVM> idUserVM = Enumerable.Empty<IdentityUserVM>().ToList();
+            List<IdentityUserVM> identityUserVM = Enumerable.Empty<IdentityUserVM>().ToList();
 
-            List<UserSections> users = _db.UserSections.Where(u => u.SectionId == section).ToList();
+            //List<UserSections> users = _db.UserSections.Where(u => u.SectionId == section).ToList();
+
+            
+
+
+            var userSections = _db.UserSections.Include(u => u.User).Where(u => u.Section.Id == section);
 
             var roleNameUserId = _db.Roles
                 .Where(u => u.Name == StaticData.Role_Section_Admin || u.Name == StaticData.Role_Technician)
@@ -40,23 +46,22 @@ namespace TicketSystem.Areas.Home.Controllers
                 )
                 .ToList();
 
-
             ViewData["sectionName"] = _db.Sections.FirstOrDefault(u => u.Id == section).Name;
             ViewData["section"] = section;
-            foreach (UserSections userSection in users)
+            foreach (UserSections userSection in userSections)
             {
                 IdentityUserVM userVM = new IdentityUserVM();
                 userVM.Id = userSection.UserId;
-                userVM.Email = _db.Users.FirstOrDefault(u => u.Id == userSection.UserId).Email;
+                userVM.Email = userSection.User.Email;
                 userVM.RoleName = roleNameUserId.FirstOrDefault(u => u.UserId == userSection.UserId).RoleName;
-                idUserVM.Add(userVM);
+                identityUserVM.Add(userVM);
 
 
             }
 
-            idUserVM = idUserVM.OrderBy(u => u.RoleName).ToList();
+            identityUserVM = identityUserVM.OrderBy(u => u.RoleName).ToList();
 
-            return View(idUserVM);
+            return View(identityUserVM);
 
         }
 
@@ -96,11 +101,11 @@ namespace TicketSystem.Areas.Home.Controllers
         public IActionResult AddUser(UserSections usersection)
         {
             UserSections usersectionChecker;
-            if (IsSectionAdmin(usersection.UserId))
-            {
-                usersectionChecker = _db.UserSections.FirstOrDefault(u => u.UserId == usersection.UserId);
-                if(usersectionChecker != null) return Redirect("/Home/Home/Error");
-            }
+            //if (IsSectionAdmin(usersection.UserId))
+            //{
+            //    usersectionChecker = _db.UserSections.FirstOrDefault(u => u.UserId == usersection.UserId);
+            //    if(usersectionChecker != null) return Redirect("/Home/Home/Error");
+            //}
 
 
             Section section = _db.Sections.FirstOrDefault(u => u.Id == usersection.SectionId);
@@ -160,28 +165,3 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
 
-//IEnumerable<Section> sectionsList;
-
-//if (!(User.IsUser() || User.IsSystemAdmin()))
-//{
-
-//    //List <UserSections> userSection 
-//    sectionsList = _db.UserSections
-//        .Where(u => u.UserId == User.GetUserId())
-//        .Join(_db.Sections,
-//            usersection => usersection.SectionId,
-//            section => section.Id,
-//            (usersection, section) => new Section
-//            {
-//                Id = section.Id,
-//                Name = section.Name
-//            });
-
-
-
-
-//    return View(sectionsList);
-
-//}
-
-//sectionsList = _db.Sections.Where(u => u.Id != 4);

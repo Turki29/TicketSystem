@@ -22,7 +22,7 @@ namespace Utility
 
             
 
-            return user.IsInRole(StaticData.Role_Section_Admin);
+            return user.IsInRole(StaticData.Role_Section_Admin) || user.IsSystemAdmin();
         }
 
         public static bool IsSectionAdmin(this ClaimsPrincipal user,string section)

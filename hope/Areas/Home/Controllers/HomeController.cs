@@ -90,8 +90,11 @@ namespace TicketSystem.Areas.Home.Controllers
             ViewData["section"] = section.ToString();
             ViewData["sectionName"] = _db.Sections.FirstOrDefault(u => u.Id == section);
 
-            // ADMIN VIEW
-            if(User.IsSectionAdmin())
+           
+
+
+            // SECTION ADMIN AND SYSTEM ADMIN VIEW
+            if (User.IsSectionAdmin() || User.IsSystemAdmin())
             {
                 ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                   .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
@@ -241,7 +244,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
             // ADMIN
-            if (User.IsSectionAdmin() && IsCurrentUserInSection(ticket.SectionId))
+            if ((User.IsSectionAdmin() && IsCurrentUserInSection(ticket.SectionId)) || User.IsSystemAdmin())
             {
                 return View(ticket);
             }
@@ -272,7 +275,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = StaticData.Role_Section_Admin +","+StaticData.Role_Technician)]
+        [Authorize(Roles = StaticData.Role_Section_Admin +","+StaticData.Role_Technician+ "," + StaticData.Role_System_Admin)]
         public IActionResult Details(Ticket ticket)
         {
 
@@ -289,7 +292,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
             //تحديث الحالة
-            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId)
+            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
                 if (ticket.Status.ToLower() == "closed")
                 {
@@ -302,7 +305,7 @@ namespace TicketSystem.Areas.Home.Controllers
             }
 
             int originalSection = dbTicket.SectionId;
-            if (User.IsSectionAdmin())
+            if (User.IsSectionAdmin() || User.IsSystemAdmin())
             {
                 // تغيير القائم على التذكرة إذا كان التقني في القسم
                 if(IsThisUserIdInSection(ticket.TechnicalIdentityUserId, ticket.SectionId)) dbTicket.TechnicalIdentityUserId = ticket.TechnicalIdentityUserId;
@@ -316,7 +319,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             }
 
-            if(User.GetUserId() == dbTicket.TechnicalIdentityUserId)
+            if(User.GetUserId() == dbTicket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
 
                 if(!string.IsNullOrEmpty(ticket.TechnicalResponse))
@@ -337,7 +340,7 @@ namespace TicketSystem.Areas.Home.Controllers
         }
 
 
-        [Authorize(Roles = StaticData.Role_Section_Admin)]
+        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin)]
         public IActionResult PartialAssignedTech(string assignedTicketTech, string section ="")
         {
             
@@ -412,7 +415,7 @@ namespace TicketSystem.Areas.Home.Controllers
         
         
         [HttpPost]
-        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_User)]
+        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_User + "," + StaticData.Role_System_Admin)]
         public IActionResult Delete(int Id)
         {
 
@@ -438,12 +441,13 @@ namespace TicketSystem.Areas.Home.Controllers
         
         }
 
-       
 
-        
 
+
+        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin)]
         public IActionResult Assign(int id, string techId)
         {
+            
             
 
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == id);
@@ -467,6 +471,10 @@ namespace TicketSystem.Areas.Home.Controllers
 
         public bool IsCurrentUserInSection(int sectionId)
         {
+            if(User.IsSystemAdmin())
+            {
+                return true;
+            }
             UserSections queryUserSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == sectionId);
 
             if (queryUserSection == null) { return false; }

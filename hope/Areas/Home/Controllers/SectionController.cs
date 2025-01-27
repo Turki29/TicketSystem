@@ -28,7 +28,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 return NotFound();
             }
 
-            List<IdentityUserVM> identityUserVM = Enumerable.Empty<IdentityUserVM>().ToList();
+            List<ApplicationUserVM> ApplicationUserVM = Enumerable.Empty<ApplicationUserVM>().ToList();
 
             //List<UserSections> users = _db.UserSections.Where(u => u.SectionId == section).ToList();
 
@@ -50,18 +50,18 @@ namespace TicketSystem.Areas.Home.Controllers
             ViewData["section"] = section;
             foreach (UserSections userSection in userSections)
             {
-                IdentityUserVM userVM = new IdentityUserVM();
+                ApplicationUserVM userVM = new ApplicationUserVM();
                 userVM.Id = userSection.UserId;
                 userVM.Email = userSection.User.Email;
                 userVM.RoleName = roleNameUserId.FirstOrDefault(u => u.UserId == userSection.UserId).RoleName;
-                identityUserVM.Add(userVM);
+                ApplicationUserVM.Add(userVM);
 
 
             }
 
-            identityUserVM = identityUserVM.OrderBy(u => u.RoleName).ToList();
+            ApplicationUserVM = ApplicationUserVM.OrderBy(u => u.RoleName).ToList();
 
-            return View(identityUserVM);
+            return View(ApplicationUserVM);
 
         }
 
@@ -72,7 +72,7 @@ namespace TicketSystem.Areas.Home.Controllers
         public IActionResult PartialGetUsers(int section)
         {
 
-            List<IdentityUserVM> roleid = _db.Roles
+            List<ApplicationUserVM> roleid = _db.Roles
                 .Where(u => u.Name == StaticData.Role_Section_Admin || u.Name == StaticData.Role_Technician)
                 .Join(_db.UserRoles
                 , roleId => roleId.Id,
@@ -83,7 +83,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 .Join(_db.Users,
                 userRoleName => userRoleName.UserId,
                 users => users.Id,
-                (userRoleName, user) => new IdentityUserVM
+                (userRoleName, user) => new ApplicationUserVM
                 {
                     Email = user.Email,
                     Id = user.Id
@@ -111,7 +111,7 @@ namespace TicketSystem.Areas.Home.Controllers
             Section section = _db.Sections.FirstOrDefault(u => u.Id == usersection.SectionId);
             if (section == null) return Redirect("/Home/Home/Error");
 
-            IdentityUser user = _db.Users.FirstOrDefault(u => u.Id == usersection.UserId);
+            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == usersection.UserId);
             if (user == null) return Redirect("/Home/Home/Error");
 
              usersectionChecker = _db.UserSections.FirstOrDefault(u => u.UserId == usersection.UserId && u.SectionId == usersection.SectionId);

@@ -5,8 +5,8 @@ namespace TicketSystem.Models
     public class ApplicationUser : IdentityUser
     {
 
-        
 
+        public int Permissions { get; set; }
 
 
 

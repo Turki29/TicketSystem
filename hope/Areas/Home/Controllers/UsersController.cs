@@ -47,7 +47,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
             DepartmentUserVM deptUserViewModel;
-            IdentityUser user;
+            ApplicationUser user;
 
             foreach (var userRole in userRoles)
             {
@@ -63,7 +63,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 deptUserViewModel.Email = user.Email;
 
                 // عدد المهام إذا كان تقني
-                deptUserViewModel.TasksCount = _db.Tickets.Where(u => u.TechnicalIdentityUserId == user.Id && u.IsDeleted == false && u.Status.ToLower() == "new").Count();
+                deptUserViewModel.TasksCount = _db.Tickets.Where(u => u.TechnicalApplicationUserId == user.Id && u.IsDeleted == false && u.Status.ToLower() == "new").Count();
 
                 //الأقسام المنتسب إليها
                 deptUserViewModel.Sections = userSection.Where(u => u.UserId == userRole.UserId).Select(u => u.Section.Name);
@@ -90,9 +90,9 @@ namespace TicketSystem.Areas.Home.Controllers
             if (userSections == null) return NotFound();
             _db.UserSections.Remove(userSections);
 
-            foreach (Ticket item in _db.Tickets.Include(u => u.Section).Where(u => u.TechnicalIdentityUserId == Id && u.Section.Name == Section))
+            foreach (Ticket item in _db.Tickets.Include(u => u.Section).Where(u => u.TechnicalApplicationUserId == Id && u.Section.Name == Section))
             {
-                item.TechnicalIdentityUserId = null;
+                item.TechnicalApplicationUserId = null;
             }
 
             _db.SaveChanges();
@@ -126,9 +126,9 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if (role.Name == StaticData.Role_Technician)
             {
-                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalIdentityUserId == Id))
+                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalApplicationUserId == Id))
                 {
-                    item.TechnicalIdentityUserId = null;
+                    item.TechnicalApplicationUserId = null;
                 }
             }
 
@@ -144,16 +144,16 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if (string.IsNullOrEmpty(Id)) return NotFound();
 
-            IdentityUser user = _db.Users.FirstOrDefault(u => u.Id == Id);
+            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == Id);
 
             if (user == null) return NotFound();
 
             try
             {
-                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalIdentityUserId == Id))
+                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalApplicationUserId == Id))
                 {
 
-                    item.TechnicalIdentityUserId = null;
+                    item.TechnicalApplicationUserId = null;
 
                 };
 

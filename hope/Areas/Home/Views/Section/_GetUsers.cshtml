@@ -1,8 +1,8 @@
-﻿@model List<IdentityUserVM>
+﻿@model List<ApplicationUserVM>
 <option selected disabled>
     -اختر مستخدم-
 </option>
-@foreach (IdentityUserVM user in Model)
+@foreach (ApplicationUserVM user in Model)
 {
     <option value="@user.Id">
         @user.Email

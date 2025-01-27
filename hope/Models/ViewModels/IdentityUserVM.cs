@@ -2,7 +2,7 @@
 
 namespace TicketSystem.Models.ViewModels
 {
-    public class IdentityUserVM
+    public class ApplicationUserVM
     {
         public string Id { get; set; } 
         public string Email { get; set; }

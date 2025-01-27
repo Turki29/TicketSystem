@@ -95,9 +95,9 @@
 
 
 
-                @if ((User.IsDepartment()) && ticket.TechnicalIdentityUser != null)
+                @if ((User.IsDepartment()) && ticket.TechnicalApplicationUser != null)
                  {
-                    <td>@ticket.TechnicalIdentityUser.Email</td>
+                    <td>@ticket.TechnicalApplicationUser.Email</td>
                  }
                 else if (User.IsTechnician())
                 {

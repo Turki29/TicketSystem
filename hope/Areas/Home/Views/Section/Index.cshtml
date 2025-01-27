@@ -1,7 +1,7 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Identity
 @using Utility
-@model IEnumerable<IdentityUserVM>
+@model IEnumerable<ApplicationUserVM>
 @{
     ViewData["title"] = "أعضاء القسم";
    
@@ -21,7 +21,7 @@
 
 
 
-    @foreach (IdentityUserVM user in Model)
+    @foreach (ApplicationUserVM user in Model)
         {
 
         <div class="bg-dark  text-white d-flex techCard d-flex justify-content-between" style="min-height: 100px; padding: 5px; border-radius: 5px;margin: 5px;">

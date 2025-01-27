@@ -18,7 +18,7 @@ namespace TicketSystem.Models
         public string SenderId { get; set; }
         [ForeignKey("SenderId")]
         [ValidateNever]
-        public IdentityUser Sender { get; set; }
+        public ApplicationUser Sender { get; set; }
 
 
         // محتويات الرد

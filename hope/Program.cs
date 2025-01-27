@@ -3,6 +3,7 @@ using TicketSystem.Data;
 using Microsoft.AspNetCore.Identity;
 using Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using TicketSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ if(string.IsNullOrEmpty(connString))
 
 builder.Services.AddDbContext<ApplicationDbContext>(option => option.UseSqlServer(connString));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 /*
  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

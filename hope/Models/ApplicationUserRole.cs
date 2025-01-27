@@ -4,7 +4,7 @@ namespace TicketSystem.Models
 {
     public class ApplicationUserRole
     {
-        public IdentityUser User { get; set; }
+        public ApplicationUser User { get; set; }
         public IdentityRole Role{ get; set; }
     }
 }

@@ -25,32 +25,94 @@
                 }
             
 
-            <div class="rounded-3 techCard m-3 p-3 d-flex flex-column align-items-start justify-content-between"
-                 style="min-height: 200px; width: 300px; color: black; font-weight: bolder; background-color: #f9f9f9; border: 3px solid @borderColor"
-                 
-            >
+           
+                <div class="rounded-3 techCard m-3 p-3 d-flex flex-column align-items-start justify-content-between"
+                     style="min-height: 200px; width: 300px; color: black; font-weight: bolder; background-color: #f9f9f9; border: 3px solid @borderColor">
 
-                
-                <div class="p-1 flex-grow-1">
-                    <div class="m-1">@departmentUserViewModel.Email</div>
-                   
-                        <div class="m-1 fs-6 p-2 rounded-3  fw-bold ">@StaticData.GetArabicRole(departmentUserViewModel.Role)</div>
-                    
-                    <div class="my-3 d-flex flex-wrap fs-6">
-                        @foreach (string sectionn in departmentUserViewModel.Sections)
-                        {
-                            <span class="text-white rounded-1 bg-info p-1 mx-1">
-                                @sectionn
-                            </span>
-                        }
+
+                    <div class="p-1 flex-grow-1">
+                        <div class="m-1">@departmentUserViewModel.Email</div>
+
+                        <div class="m-1 fs-6 p-2 rounded-3  fw-bold ">
+
+                            <select id="roles-@departmentUserViewModel.Id" value=""> 
+
+                            </select>
+
+
+                            <script>
+
+                            $("#roles-@departmentUserViewModel.Id").load("/Home/users/PartialRoles", function () {
+                                // ينفذ عقب التحميل
+                                $("#roles-@departmentUserViewModel.Id").val("@departmentUserViewModel.RoleId");
+                            });
+
+                            $("#roles-@departmentUserViewModel.Id").on("change", function () {
+                                fetch(
+                                    `${window.location.origin}/Home/Users/UpdateRole?Id=${encodeURIComponent("@departmentUserViewModel.Id")}&NewRoleId=${encodeURIComponent($(`select#roles-@departmentUserViewModel.Id`).val())}`,
+                                    {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json"
+                                        },
+                                        body: JSON.stringify({
+                                            Id: "@departmentUserViewModel.Id",
+                                            NewRoleId: $(`#roles-@departmentUserViewModel.Id`).val() // يجب استخدام val() كدالة هنا
+                                        })
+                                    }
+                                )
+                                    .then(response => {
+                                        if (response.ok) {
+                                            // إذا تم الطلب بنجاح، أعد التوجيه
+                                            window.location.href = `${window.location.origin}/Home/Users`;
+                                        } else {
+                                            // التعامل مع الخطأ إذا لم يكن الطلب ناجحًا
+                                            throw new Error("خطأ أثناء تحديث الدور");
+                                        }
+                                    })
+                                    .catch(error => {
+                                        // عرض نافذة الخطأ باستخدام SweetAlert
+                                        Swal.fire({
+                                            title: "حصل خطأ!",
+                                            text: "لم يتم تحديث دور المستخدم.",
+                                            icon: "error",
+                                            footer: "<a href='#' class='text-info'>تواصل معنا</a>"
+                                        });
+                                    });
+
+                            });
+
+                        </script>
+                        </div>
+
+                        <div class="my-3 d-flex flex-wrap fs-6">
+                            @if(departmentUserViewModel.Sections.Count() == 0)
+                            {
+                                <a asp-action="AddUser" asp-controller="Section" class="btn btn-info text-white rounded-1 p-2 mx-1">
+                                    +
+                                </a>
+                            }
+                            @foreach (string sectionn in departmentUserViewModel.Sections)
+                            {
+                                <a asp-action="RemoveFromSection"  asp-route-Id="@departmentUserViewModel.Id" asp-route-Section="@sectionn" class="btn btn-info text-white rounded-1 p-1 mx-1">
+                                    × @sectionn 
+                                </a>
+                            }
+                        </div>
+
+                    @if (departmentUserViewModel.Role == StaticData.Role_Technician)
+                    {
+                        <div>عدد التذاكر: @departmentUserViewModel.TasksCount</div>
+                    }
+
                     </div>
-                </div>
 
-                
-                <a class="btn btn-danger text-white text-center mt-auto w-100 p-2 rounded-3">
-                    <i class="bi bi-trash"></i>    
-                </a>
-            </div>
+
+                    <a onclick="Delete('@departmentUserViewModel.Id')" class="btn btn-danger text-white text-center mt-auto w-100 p-2 rounded-3">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </div>
+           
         }
     </div>
 
@@ -60,3 +122,62 @@
 
 </div>
 
+
+<script>
+    function Delete(userId){
+
+        Swal.fire({
+            title: "متأكد؟",
+            text: "لا تراجع بعد هذا!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            cancelButtonText: "ألغ",
+            confirmButtonText: "نعم، احذف!"
+        }).then((result) => {
+            if (result.isConfirmed && !( userId == null || userId.length < 1)) {
+
+                fetch(
+                    window.location.origin + "/Home/Users/Delete?Id=" + userId,
+                    {
+                        method: "POST",
+                        headers:
+                        {
+                            "Content-Type": "application/json"
+
+                        },
+                        body: JSON.stringify({ Id: userId }) // مفروض استعمله لكن مشوار أسوي كائن جديد عشان الطلب هذا بس
+                    }
+                )
+                    .then(response => {
+
+                        if (response.ok) {
+
+                            window.location.href = window.location.origin + '/Home/Users'; 
+
+                        }
+                        else {
+                            throw new Error("خطأ أثناء الحذف")
+                        }
+
+                    })
+
+                    .catch(error => {
+
+                        Swal.fire({
+                            title: "حصل خطأ!",
+                            text: "لم يُحذف المستخدم.",
+                            icon: "error",
+                            footer: "<a href='#' class='text-info'>تواصل معنا</a>"
+                        });
+
+                    })
+
+
+
+
+            }
+        });
+    }
+</script>

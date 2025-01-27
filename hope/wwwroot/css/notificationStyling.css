@@ -1,0 +1,15 @@
+﻿.notify {
+    position: absolute;
+    background-color: red;
+    top: -15px;
+    left: -25px;
+    border-radius: 30px;
+    padding: 5px;
+    /* width: 20px; */
+    /* height: 20px; */
+}
+
+.relativee {
+    position: relative;
+    overflow: visible;
+}

@@ -242,6 +242,9 @@ namespace TicketSystem.Areas.Home.Controllers
             // IS TICKET NULL?
             if (ticket == null) return NotFound();
 
+            ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+
+
 
             // ADMIN
             if ((User.IsSectionAdmin() && IsCurrentUserInSection(ticket.SectionId)) || User.IsSystemAdmin())
@@ -324,9 +327,11 @@ namespace TicketSystem.Areas.Home.Controllers
 
                 if(!string.IsNullOrEmpty(ticket.TechnicalResponse))
                 {
-                    dbTicket.TechnicalResponse = ticket.TechnicalResponse;
-                    dbTicket.TechResponseAt = DateTime.Now;
+                    //dbTicket.TechnicalResponse = ticket.TechnicalResponse;
+                    //dbTicket.TechResponseAt = DateTime.Now;
                 }
+
+                
 
             }
 
@@ -489,7 +494,44 @@ namespace TicketSystem.Areas.Home.Controllers
             else { return true; }
         }
 
+        public IActionResult SendMessage(int TicketId, string Message)
+        {
 
+            
+
+            if (string.IsNullOrEmpty(Message)) return NotFound();
+
+            TicketResponse ticketResponse = new TicketResponse();
+
+            
+            
+            Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == TicketId);
+            if (ticket == null) return NotFound();
+
+            if(User.GetUserId() != ticket.TechnicalIdentityUserId && User.GetUserId() != ticket.SenderIdentityUserId) return NotFound();
+            
+            if(User.GetUserId() == ticket.TechnicalIdentityUserId)
+            {
+                ticket.UnresponsedMessage = false;
+            }
+            else
+            {
+                ticket.UnresponsedMessage = true;
+            }
+
+            ticketResponse.SenderName = User.GetUserEmail();
+            ticketResponse.TicketId = ticket.Id;
+            ticketResponse.SenderId = User.GetUserId();
+            ticketResponse.Message = Message;
+            ticketResponse.DateSent = DateTime.Now;
+            
+
+            _db.TicketResponses.Add(ticketResponse);
+            _db.SaveChanges();
+            TempData["success"] = "أرسلت رسالتك";
+            
+            return Ok();
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketSystem.Data;
-using TicketSystem.Models;
-using TicketSystem.Models.ViewModels;
+using Models;
+using Models.ViewModels;
 using Utility;
 
 namespace TicketSystem.Areas.Home.Controllers

@@ -1,6 +1,6 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 
-namespace TicketSystem.Models.ViewModels
+namespace Models.ViewModels
 {
     public class DepartmentUserVM
     {

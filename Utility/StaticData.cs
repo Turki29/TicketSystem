@@ -8,6 +8,18 @@
         public const string Role_Technician = "Tech";
         public const string Role_User = "User";
 
+        [Flags]
+        public enum EnUserPermissions
+        {
+            User = 0,
+            ReadNetworking = 1 << 0,
+            ReadProgramming = 1 << 2,
+            ReadIT = 1 << 3,
+            SystemAdmin = 1 << 4,
+            
+
+
+        }
 
         public static string GetArabicRole(string role)
         {

@@ -10,10 +10,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using TicketSystem.Data;
-using TicketSystem.Models;
-using TicketSystem.Models.ViewModels;
+using Models;
+using Models.ViewModels;
 using Utility;
-using static System.Net.Mime.MediaTypeNames;
+
 
 namespace TicketSystem.Areas.Home.Controllers
 {
@@ -34,10 +34,11 @@ namespace TicketSystem.Areas.Home.Controllers
 
             IEnumerable<Section> sectionsList;
 
+            
             if (!(User.IsUser() || User.IsSystemAdmin()))
             {
-
-                //List <UserSections> userSection 
+              
+                
                 sectionsList = _db.UserSections
                     .Where(u => u.UserId == User.GetUserId())
                     .Join(_db.Sections,
@@ -295,7 +296,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
             //تحديث الحالة
-            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId || User.IsSystemAdmin())
+            if(User.IsSectionAdmin() || User.GetUserId() == dbTicket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
                 if (ticket.Status.ToLower() == "closed")
                 {
@@ -449,7 +450,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
 
-        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin)]
+        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin+ "," + StaticData.Role_Technician)]
         public IActionResult Assign(int id, string techId)
         {
             
@@ -494,19 +495,20 @@ namespace TicketSystem.Areas.Home.Controllers
             else { return true; }
         }
 
-        public IActionResult SendMessage(int TicketId, string Message)
+        public IActionResult SendMessage(int TicketId, string Message, string isPrivate, IFormFile img)
         {
-
+            
             
 
-            if (string.IsNullOrEmpty(Message)) return NotFound();
+            if (string.IsNullOrEmpty(Message) && img == null) return BadRequest(new { Message = "الرسالة فارغة" });
 
             TicketResponse ticketResponse = new TicketResponse();
 
             
             
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == TicketId);
-            if (ticket == null) return NotFound();
+            if (ticket == null) return BadRequest(new { Message = "ما وجدنا التذكرة" });
+            if (ticket.ClosedAt != null) return BadRequest(new { Message = "التذكرة مغلقة" });
 
             if(User.GetUserId() != ticket.TechnicalIdentityUserId && User.GetUserId() != ticket.SenderIdentityUserId) return NotFound();
             
@@ -524,6 +526,45 @@ namespace TicketSystem.Areas.Home.Controllers
             ticketResponse.SenderId = User.GetUserId();
             ticketResponse.Message = Message;
             ticketResponse.DateSent = DateTime.Now;
+
+            if (img != null)
+            {
+
+                try
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(img.FileName);
+
+
+
+
+                    var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Ticket_Attachment_Images");
+                    Directory.CreateDirectory(uploadPath);
+
+                    var filePath = Path.Combine(uploadPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        img.CopyTo(fileStream);
+                    }
+                    ticketResponse.AttachmentPath = fileName;
+                }
+                catch (Exception e)
+                {
+
+                }
+
+            }
+            
+
+
+            if (User.IsUser())
+            {
+                ticketResponse.invisibleForCustomer = false;
+            }
+            else
+            {
+                ticketResponse.invisibleForCustomer = "on" == isPrivate ? true : false;
+            }
             
 
             _db.TicketResponses.Add(ticketResponse);

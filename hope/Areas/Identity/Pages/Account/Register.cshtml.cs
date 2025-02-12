@@ -7,11 +7,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -19,8 +21,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Web.CodeGeneration.DotNet;
+using Models;
+using TicketSystem.Data;
 using Utility;
+using static Utility.StaticData;
 
 namespace TicketSystem.Areas.Identity.Pages.Account
 {
@@ -29,6 +36,7 @@ namespace TicketSystem.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         public readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ApplicationDbContext _db;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
@@ -40,9 +48,11 @@ namespace TicketSystem.Areas.Identity.Pages.Account
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender
+            IEmailSender emailSender,
+            ApplicationDbContext db
             )
         {
+            _db = db;
             _userManager = userManager;
             _userStore = userStore;
             _roleManager = roleManager;
@@ -159,6 +169,29 @@ namespace TicketSystem.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
+
+                    var userPermissions = await _db.UserPermissions
+                    .Where(up => up.UserId == user.Id)
+                    .Select(up => up.Permissions)
+                    .FirstOrDefaultAsync(); // جلب الصلاحيات كـ `ushort`
+
+                    if(userPermissions == null)
+                    {
+                        userPermissions =  (ushort)EnUserPermissions.User;
+                    }
+
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, user.UserName),
+                        new Claim(ClaimTypes.NameIdentifier, user.Id),
+                        new Claim("Permissions", userPermissions.ToString()) // حفظ الصلاحيات
+                    };
+
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+
                     _logger.LogInformation("User created a new account with password.");
 
                     if (!String.IsNullOrEmpty(Input.Role))

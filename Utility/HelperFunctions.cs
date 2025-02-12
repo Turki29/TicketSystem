@@ -5,17 +5,30 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Models;
+using static Utility.StaticData;
 
 namespace Utility
 {
     public static class HelperFunctions
     {
+        public static bool HasPermission(this ClaimsPrincipal user, EnUserPermissions permission)
+        {
+            var permissionsClaim = user.FindFirst("Permissions")?.Value;
+
+            if (permissionsClaim != null && ushort.TryParse(permissionsClaim, out ushort userPermissions))
+            {
+                return (userPermissions & (ushort)permission) == (ushort)permission;
+            }
+
+            return false;
+        }
 
         public static bool IsSystemAdmin(this ClaimsPrincipal user) // أضف اسم القسم
         {
 
 
-            return user.IsInRole(StaticData.Role_System_Admin);
+            return user.HasPermission(StaticData.EnUserPermissions.SystemAdmin);
         }
         public static bool IsSectionAdmin(this ClaimsPrincipal user) // أضف اسم القسم
         {
@@ -65,6 +78,8 @@ namespace Utility
         {
             return user.FindFirstValue(ClaimTypes.Email);
         }
+
+
 
 
     }

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Data;
 using System.Reflection.Emit;
-using TicketSystem.Models;
+using Models;
 
 namespace TicketSystem.Data
 {
@@ -28,7 +28,7 @@ namespace TicketSystem.Data
         public DbSet<UserSections> UserSections { get; set; }
         public DbSet<TicketResponse> TicketResponses { get; set; }
 
-
+        public DbSet<UserPermission> UserPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -36,6 +36,9 @@ namespace TicketSystem.Data
 
             builder.Entity<UserSections>()
                 .HasKey(us => new { us.UserId, us.SectionId });
+
+            builder.Entity<UserPermission>()
+                .HasKey(us => new { us.UserId, us.Permissions});
 
             builder.Entity<TicketResponse>()
             .HasOne(tr => tr.Sender)

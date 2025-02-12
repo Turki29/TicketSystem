@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Linq;
 using TicketSystem.Data;
-using TicketSystem.Models;
-using TicketSystem.Models.ViewModels;
+using Models;
+using Models.ViewModels;
 using Utility;
 
 namespace TicketSystem.Areas.Home.Controllers
 {
     [Area("Home")]
-    [Authorize(Roles = StaticData.Role_System_Admin)]
+    
     public class UsersController : Controller
     {
 
@@ -28,7 +28,10 @@ namespace TicketSystem.Areas.Home.Controllers
         public IActionResult Index()
         {
 
-
+            if (!User.IsSystemAdmin())
+            {
+                return Redirect("/Identity/Account/AccessDenied");
+            }
 
 
             List<DepartmentUserVM> departmentUsersVMList = new List<DepartmentUserVM>();
@@ -85,7 +88,10 @@ namespace TicketSystem.Areas.Home.Controllers
 
         public IActionResult RemoveFromSection(string Id, string Section)
         {
-
+            if (!User.IsSystemAdmin())
+            {
+                return Redirect("/Identity/Account/AccessDenied");
+            }
             UserSections userSections = _db.UserSections.Include(u => u.Section).FirstOrDefault(u => u.UserId == Id && u.Section.Name == Section);
             if (userSections == null) return NotFound();
             _db.UserSections.Remove(userSections);
@@ -102,7 +108,10 @@ namespace TicketSystem.Areas.Home.Controllers
 
         public IActionResult UpdateRole(string Id, string NewRoleId)
         {
-
+            if (!User.IsSystemAdmin())
+            {
+                return Redirect("/Identity/Account/AccessDenied");
+            }
             var userRoles = _db.UserRoles.FirstOrDefault(u => u.UserId == Id);
 
             if (userRoles == null) return NotFound();

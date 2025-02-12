@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TicketSystem.Data;
 
@@ -11,9 +12,11 @@ using TicketSystem.Data;
 namespace TicketSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250127135514_addingPermissionTable")]
+    partial class addingPermissionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -220,7 +223,7 @@ namespace TicketSystem.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Models.Section", b =>
+            modelBuilder.Entity("TicketSystem.Models.Section", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -237,7 +240,7 @@ namespace TicketSystem.Migrations
                     b.ToTable("Sections");
                 });
 
-            modelBuilder.Entity("Models.Ticket", b =>
+            modelBuilder.Entity("TicketSystem.Models.Ticket", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -301,7 +304,7 @@ namespace TicketSystem.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Models.TicketResponse", b =>
+            modelBuilder.Entity("TicketSystem.Models.TicketResponse", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,13 +312,11 @@ namespace TicketSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AttachmentPath")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("DateSent")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Message")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SenderId")
@@ -329,9 +330,6 @@ namespace TicketSystem.Migrations
                     b.Property<int>("TicketId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("invisibleForCustomer")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.HasIndex("SenderId");
@@ -341,20 +339,7 @@ namespace TicketSystem.Migrations
                     b.ToTable("TicketResponses");
                 });
 
-            modelBuilder.Entity("Models.UserPermission", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Permissions")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "Permissions");
-
-                    b.ToTable("UserPermissions");
-                });
-
-            modelBuilder.Entity("Models.UserSections", b =>
+            modelBuilder.Entity("TicketSystem.Models.UserSections", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -420,9 +405,9 @@ namespace TicketSystem.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Models.Ticket", b =>
+            modelBuilder.Entity("TicketSystem.Models.Ticket", b =>
                 {
-                    b.HasOne("Models.Section", "Section")
+                    b.HasOne("TicketSystem.Models.Section", "Section")
                         .WithMany()
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -445,7 +430,7 @@ namespace TicketSystem.Migrations
                     b.Navigation("TechnicalIdentityUser");
                 });
 
-            modelBuilder.Entity("Models.TicketResponse", b =>
+            modelBuilder.Entity("TicketSystem.Models.TicketResponse", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Sender")
                         .WithMany()
@@ -453,7 +438,7 @@ namespace TicketSystem.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Models.Ticket", "Ticket")
+                    b.HasOne("TicketSystem.Models.Ticket", "Ticket")
                         .WithMany()
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -464,9 +449,9 @@ namespace TicketSystem.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("Models.UserSections", b =>
+            modelBuilder.Entity("TicketSystem.Models.UserSections", b =>
                 {
-                    b.HasOne("Models.Section", "Section")
+                    b.HasOne("TicketSystem.Models.Section", "Section")
                         .WithMany()
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Cascade)

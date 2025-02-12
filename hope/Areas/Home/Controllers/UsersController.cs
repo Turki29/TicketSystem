@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Linq;
 using TicketSystem.Data;
 using TicketSystem.Models;
@@ -37,7 +36,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 .Where(u => u.Name == StaticData.Role_Technician || u.Name == StaticData.Role_Section_Admin)
                 .ToList();
 
-            List<string> listOfIds = role.Select(u => u.Id).ToList();
+            List<string> listOfIds= role.Select(u => u.Id).ToList();
 
             //UserRoles نوعه
             var userRoles = _db.UserRoles.Where(u => listOfIds.Contains(u.RoleId)).ToList();
@@ -46,18 +45,18 @@ namespace TicketSystem.Areas.Home.Controllers
             List<UserSections> userSection = _db.UserSections.Include(u => u.Section).ToList();
 
 
-            DepartmentUserVM deptUserViewModel;
+            DepartmentUserVM deptUserViewModel ;
             IdentityUser user;
-
-            foreach (var userRole in userRoles)
+            
+            foreach (var userRole in userRoles) 
             {
-
-
+                
+                
                 deptUserViewModel = new DepartmentUserVM();
-
-
-                user = _db.Users.FirstOrDefault(u => u.Id == userRole.UserId);
-
+                
+                
+                user = _db.Users.FirstOrDefault(u => u.Id == userRole.UserId );
+                
                 // معلومات عضو القسم
                 deptUserViewModel.Id = user.Id;
                 deptUserViewModel.Email = user.Email;
@@ -70,7 +69,6 @@ namespace TicketSystem.Areas.Home.Controllers
 
                 //
                 deptUserViewModel.Role = role.FirstOrDefault(u => u.Id == userRole.RoleId).Name;
-                deptUserViewModel.RoleId = userRole.RoleId;
 
                 departmentUsersVMList.Add(deptUserViewModel);
 
@@ -83,106 +81,14 @@ namespace TicketSystem.Areas.Home.Controllers
             return View(departmentUsersVMList);
         }
 
-        public IActionResult RemoveFromSection(string Id, string Section)
-        {
-
-            UserSections userSections = _db.UserSections.Include(u => u.Section).FirstOrDefault(u => u.UserId == Id && u.Section.Name == Section);
-            if (userSections == null) return NotFound();
-            _db.UserSections.Remove(userSections);
-
-            foreach (Ticket item in _db.Tickets.Include(u => u.Section).Where(u => u.TechnicalIdentityUserId == Id && u.Section.Name == Section))
-            {
-                item.TechnicalIdentityUserId = null;
-            }
-
-            _db.SaveChanges();
-            return RedirectToAction(nameof(Index));
-
-        }
-
-        public IActionResult UpdateRole(string Id, string NewRoleId)
-        {
-
-            var userRoles = _db.UserRoles.FirstOrDefault(u => u.UserId == Id);
-
-            if (userRoles == null) return NotFound();
-
-            IdentityRole role = _db.Roles.FirstOrDefault(u => u.Id == NewRoleId); // الدور الجديد
-
-            if (role == null) return NotFound();
-
-            role = _db.Roles.FirstOrDefault(u => u.Id == userRoles.RoleId); // الدور القديم
-
-            _db.UserRoles.Remove(userRoles);
-
-
-
-
-            var newUserRole = new IdentityUserRole<string>
-            {
-                UserId = Id,
-                RoleId = NewRoleId
-            };
-
-            if (role.Name == StaticData.Role_Technician)
-            {
-                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalIdentityUserId == Id))
-                {
-                    item.TechnicalIdentityUserId = null;
-                }
-            }
-
-            _db.UserRoles.Add(newUserRole);
-            _db.SaveChanges();
-
-            return Ok();
-
-
-        }
-        public IActionResult Delete(string Id)
-        {
-
-            if (string.IsNullOrEmpty(Id)) return NotFound();
-
-            IdentityUser user = _db.Users.FirstOrDefault(u => u.Id == Id);
-
-            if (user == null) return NotFound();
-
-            try
-            {
-                foreach (Ticket item in _db.Tickets.Where(u => u.TechnicalIdentityUserId == Id))
-                {
-
-                    item.TechnicalIdentityUserId = null;
-
-                };
-
-                _db.Users.Remove(user);
-            }
-            catch (Exception e)
-            {
-
-
-                return NotFound();
-
-            }
-            _db.SaveChanges();
-            return Ok();
-
-
-
-
-
-        }
-
-        public IActionResult PartialRoles()
-        {
-            List<IdentityRole> Roles = _db.Roles.ToList();
-
-            return PartialView("_GetRoles", Roles);
-
-        }
-
+     
        
+        public IActionResult AssignToSection()
+        {
+
+
+
+            return View();
+        }
     }
 }

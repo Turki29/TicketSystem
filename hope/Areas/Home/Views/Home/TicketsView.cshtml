@@ -73,7 +73,6 @@
     <th>تاريخ الإنشاء</th>
     <th>الحالة</th>
     <th>تاريخ الانتهاء</th>
-    
         @if (User.IsDepartment())
         {
         <th>القائم على التذكرة</th>
@@ -113,17 +112,9 @@
         
                
                 <td >
-                    <div class="d-flex flex-lg-wrap ">
-                        <a class="btn btn-info m-1 relativee" asp-action="Details" asp-route-Id="@ticket.Id">
-                            <i class="bi bi-info-circle-fill"></i>
-                            @if (!User.IsUser() && ticket.UnresponsedMessage == true)
-                            {
-                                <div class="notify">
-                                    رسالة
-                                </div>
-                            }
-                        </a>
-                       
+                    <div class="d-flex flex-lg-wrap">
+                        <a class="btn btn-info m-1" asp-action="Details" asp-route-Id="@ticket.Id"><i class="bi bi-info-circle-fill"></i></a>
+   
                     </div>
                     
                 </td>

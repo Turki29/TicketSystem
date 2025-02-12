@@ -26,8 +26,8 @@ namespace TicketSystem.Data
         public DbSet<Section> Sections { get; set; }
         [ValidateNever]
         public DbSet<UserSections> UserSections { get; set; }
-        public DbSet<TicketResponse> TicketResponses { get; set; }
 
+       
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -36,12 +36,6 @@ namespace TicketSystem.Data
 
             builder.Entity<UserSections>()
                 .HasKey(us => new { us.UserId, us.SectionId });
-
-            builder.Entity<TicketResponse>()
-            .HasOne(tr => tr.Sender)
-            .WithMany()
-            .HasForeignKey(tr => tr.SenderId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         }
 

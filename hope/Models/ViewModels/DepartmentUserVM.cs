@@ -9,7 +9,6 @@ namespace TicketSystem.Models.ViewModels
         public string Email { get; set; }
         public int TasksCount { get; set; }
         public string Role { get; set; }
-        public string RoleId { get; set; }
         public IEnumerable<string> Sections { get; set; }
 
 

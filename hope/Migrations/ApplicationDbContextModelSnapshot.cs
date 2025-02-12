@@ -287,9 +287,6 @@ namespace TicketSystem.Migrations
                     b.Property<string>("TicketImageAttachmentPath")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("UnresponsedMessage")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.HasIndex("SectionId");
@@ -299,41 +296,6 @@ namespace TicketSystem.Migrations
                     b.HasIndex("TechnicalIdentityUserId");
 
                     b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("TicketSystem.Models.TicketResponse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateSent")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("SenderName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TicketId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SenderId");
-
-                    b.HasIndex("TicketId");
-
-                    b.ToTable("TicketResponses");
                 });
 
             modelBuilder.Entity("TicketSystem.Models.UserSections", b =>
@@ -425,25 +387,6 @@ namespace TicketSystem.Migrations
                     b.Navigation("SenderIdentityUser");
 
                     b.Navigation("TechnicalIdentityUser");
-                });
-
-            modelBuilder.Entity("TicketSystem.Models.TicketResponse", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TicketSystem.Models.Ticket", "Ticket")
-                        .WithMany()
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Sender");
-
-                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("TicketSystem.Models.UserSections", b =>

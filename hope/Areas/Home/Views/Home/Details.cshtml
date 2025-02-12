@@ -1,232 +1,388 @@
 ﻿@model Ticket
+
 @{
     ViewData["title"] = "تفاصيل التذكرة " + Model.Id;
 }
 
-<h1 class="text-center m-5">تفاصيل التذكرة</h1>
+<div class="container-fluid d-flex">
+    <!-- Form Section -->
+    <div class="flex-grow-1 me-3">
+        <h1 class="text-center m-5">تفاصيل التذكرة</h1>
 
-<form  method="post" enctype="multipart/form-data">
-    <div class="m-5">
+        <form method="post" enctype="multipart/form-data">
+            <div class="m-5">
+                <input type="type" hidden asp-for="@Model.Id" />
 
-        <input type="type" hidden asp-for="@Model.Id" />
+                <fieldset>
+                    <label class="m-1"> مرسل التذكرة</label>
+                    <input class="form-control" asp-for="@Model.SenderIdentityUser.UserName" readonly disabled />
+                    @if (User.IsSectionAdmin())
+
+                    {
+                        <div class="mt-3">
+                            <label class="m-1"> القائم على التذكرة</label>
+
+                            <select id="technician-select"
+                                    class="form-select "
+                                    asp-for="@Model.TechnicalIdentityUserId">
+                            </select>
+                        </div>
+
+                        <script>
+                            $("#technician-select").load("/Home/Home/PartialAssignedTech?assignedTicketTech=@Model.TechnicalIdentityUserId" + "&section=@Model.SectionId")
+                        </script>
+
+                        <div class="mt-3">
+                            <label> وزن التذكرة</label>
+                            <input class="form-control" type="tel" asp-for="@Model.RelativeWeight" />
+                        </div>
 
 
-        <fieldset>
-            <label class="m-1"> مرسل التذكرة</label>
-            <input class="form-control" asp-for="@Model.SenderIdentityUser.UserName" readonly disabled />
-            @if (User.IsSectionAdmin())
-            {
+
+                        <script>
+                            $("#sections").load("/Home/Home/PartialSections?selectedSection=@Model.SectionId")
+                        </script>
+                    }
+
+                    <div class="mt-3">
+                        <label> قسم التذكرة</label>
+                        <select id="sections"
+                                class="form-select"
+                                asp-for="@Model.SectionId">
+                        </select>
+                    </div>
+
+                    @if (User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
+
+                    {
+                        <label for="TicketStatus" class="mt-3">حالة التذكرة</label>
+                        <select class="form-select" asp-for="@Model.Status">
+                            <option value="new">جديدة</option>
+                            <option value="closed">مغلقة</option>
+                        </select>
+                    }
+
+                    else
+
+                    {
+                        <input class="form-control mt-3" asp-for="@Model.Status" readonly disabled />
+                    }
+                </fieldset>
+
+                <label for="problemDescription" class="mt-3">تفاصيل التذكرة</label>
+                <textarea class="form-control"
+                          id="problemDescription"
+                          rows="3"
+                          readonly disabled
+                          asp-for="@Model.ProblemDescription"></textarea>
+
                 <div class="mt-3">
-                    <label class="m-1"> القائم على التذكرة</label>
-
-
-                    <select id="technician-select"
-                    class="form-select "
-                    asp-for="@Model.TechnicalIdentityUserId">
-                    </select>
-
+                    <label for="TechnicalResponseDate">تاريخ رد التذكرة</label>
+                    <input class="form-control" id="TechnicalResponseDate"
+                           disabled readonly
+                           asp-for="@Model.TechResponseAt" placeholder="لم يرد التقني بعد" />
+                    <span asp-validation-for="@Model.TechResponseAt"></span>
                 </div>
 
-                <script>
-                    $("#technician-select").load("/Home/Home/PartialAssignedTech?assignedTicketTech=@Model.TechnicalIdentityUserId"+ "&section=@Model.SectionId")
-                </script>
+                @if (User.GetUserId() == Model.TechnicalIdentityUserId && !string.IsNullOrEmpty(Model.TechnicalResponse))
+
+                {
+                    <div class="mt-3">
+                        <label for="TechnicalResponse">رد التذكرة</label>
+                        <textarea class="form-control" id="TechnicalResponse" rows="3"
+                                  asp-for="@Model.TechnicalResponse" placeholder="لم يرد التقني بعد"></textarea>
+                        <span asp-validation-for="@Model.TechnicalResponse"></span>
+                    </div>
+                }
+
+                else if (!string.IsNullOrEmpty(Model.TechnicalResponse))
+
+                {
+                    <div class="mt-3">
+                        <label for="TechnicalResponse">رد التذكرة</label>
+                        <textarea class="form-control" id="TechnicalResponse" rows="3"
+                                  asp-for="@Model.TechnicalResponse"
+                                  placeholder="لم يرد التقني بعد"
+                                  readonly disabled></textarea>
+                        <span asp-validation-for="@Model.TechnicalResponse"></span>
+                    </div>
+                }
 
                 <div class="mt-3">
-
-
-                    <label> وزن التذكرة</label>
-                    <input class="form-control" type="tel" asp-for="@Model.RelativeWeight" />
-
+                    <label>الصورة المرفقة</label>
+                    <div>
+                        <img src='@Url.Action("GetImage", new {imageName = Model.TicketImageAttachmentPath})'
+                             class="mx-5 mb-5"
+                             style="width: 50%;"
+                             alt='بلا مرفقات' />
+                    </div>
                 </div>
 
-                <div class="mt-3">
+                <a class="btn btn-primary mt-4" asp-action="TicketsView" asp-route-section='@Model.SectionId'>ارجع للواجهة</a>
+                @if (User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
+
+                {
+                    <button type="submit" class="btn btn-info mt-4">حدّث التذكرة</button>
+                }
+
+                @if (User.IsSectionAdmin() || User.IsUser())
+
+                {
+                    <a onclick="SwalAlert()" class="btn btn-danger mt-4">حذف</a>
+                }
+            </div>
+        </form>
 
 
-                    <label> قسم التذكرة</label>
-                     <select id="sections"
-                    class="form-select" 
-                     asp-for="@Model.SectionId"
-                     
-                     >
 
-                    </select>
+
+
+        <!-- Chat Section -->
+        <div class="border p-3 rounded bg-light">
+            <h4 class="text-center mb-4">المحادثة</h4>
+            <div id="chat-box" class="border rounded p-2 mb-3" style="height: 400px; overflow-y: auto; background: #f8f9fa;">
+                <p class="text-muted text-center">بداية المحادثة</p>
+
+                @foreach (TicketResponse message in (List<TicketResponse>)ViewData["MessagesOfTicket"])
+                {
+
+                    if (message.invisibleForCustomer && User.IsUser())
+                    {
+                        continue;
+                    }
+
+
+                    <div class="my-2 p-1 bg-light" style="filter:brightness(0.95);">
+                        <strong>@message.SenderName:</strong>
+                        @if (!string.IsNullOrEmpty(message.AttachmentPath))
+                        {
+                            <div class="text-dark" style="width: 250px; height:250px; background-image: url('@Url.Action("GetImage", new {imageName = message.AttachmentPath})'); background-position:center; background-size:cover;"
+                                 onclick="swalimage('@message.AttachmentPath', '@message.Message' , 'الصورة غير متوفرة' )">
+                            </div>
+                        }
+                        <p>@message.Message</p>
+                        <small class="text-muted">@message.DateSent.ToString("g")</small>
+                    </div>
+
+
+
+                }
+
+            </div>
+            @if (User.GetUserId() == Model.TechnicalIdentityUserId || User.IsUser())
+            {
+                <div class="input-group">
+                    <form id="message-form" enctype="multipart/form-data" asp-action="SendMessage" method="post" style="width:100%">
+                        <input type="text" hidden name="TicketId" value="@Model.Id" />
+                        <div style="width:100%">
+
+                            <div>
+                                <div id="img-container" class="d-none border-1 border-primary p-2"
+                                     style="background-size:contain; background-position:center; background-repeat:no-repeat; width:30%; height:200px;"></div>
+                            </div>
+
+                            <input type="text" name="Message" class="form-control" placeholder="اكتب رسالة..." style="width:60%; display:inline;" />
+                            <input hidden required type="file" id="image" name="image" accept="image/png" />
+                            <label id="addImage" for="image" class="btn btn-primary"><i class='bi bi-image'></i></label>
+                            <label id="removeImage" class="btn btn-primary d-none fs-3"><i class='bi bi-x'></i></label>
+                            <button type="submit" id="send-message-btn" class="btn btn-primary" style="width:20%;display:inline"> إرسال</button>
+                        </div>
+
+                        @if (!User.IsUser())
+                        {
+                            <input type="checkbox" name="isPrivate" id="isPrivate" />
+                            <label for="isPrivate">اخف الرسالة عن المستخدم</label>
+                        }
+                    </form>
+
+
 
                 </div>
-
-
-                <script>
-                    $("#sections").load("/Home/Home/PartialSections?selectedSection=@Model.SectionId")
-                </script>
-
-
             }
-            else
-            {
-                <label for="TicketSection" class="mt-3">قسم التذكرة</label>
-                <input class="form-control mt-3" asp-for="@Model.Section.Name" readonly disabled />
-
-            }
-
-
-            @if (User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
-            {
-                <label for="TicketStatus" class="mt-3">حالة التذكرة</label>
-
-
-
-                <select class="form-select" asp-for="@Model.Status">
-
-                    <option value="new">
-                        جديدة
-                    </option>
-                    <option value="closed">
-                        مغلقة
-                    </option>
-
-                </select>
-            }
-            else
-            {
-                <input class="form-control mt-3" asp-for="@Model.Status" readonly disabled />
-            }
-
-            
-
-        </fieldset>
-
-        <label for="problemDescription" class="mt-3">تفاصيل التذكرة</label>
-        <textarea class="form-control" 
-        id="problemDescription" 
-        rows="3" 
-        readonly disabled 
-        asp-for="@Model.ProblemDescription">
-
-        </textarea>
-
-        <div class="mt-3">
-
-            <label for="TechnicalResponseDate">تاريخ رد التذكرة</label>
-            <input class="form-control" id="TechnicalResponseDate"
-            disabled readonly
-                      asp-for="@Model.TechResponseAt" placeholder="لم يرد التقني بعد"/>
-            <span asp-validation-for="@Model.TechResponseAt"
-            ></span>
         </div>
-
-        @if (User.GetUserId() == Model.TechnicalIdentityUserId)
-        {
-            <div class="mt-3">
-
-                <label for="TechnicalResponse">رد التذكرة</label>
-                <textarea class="form-control" id="TechnicalResponse" rows="3"
-                          asp-for="@Model.TechnicalResponse" placeholder="لم يرد التقني بعد"></textarea>
-                <span asp-validation-for="@Model.TechnicalResponse"></span>
-            </div>
-        }
-        else
-        {
-            <div class="mt-3">
-
-                <label for="TechnicalResponse">رد التذكرة</label>
-                <textarea class="form-control" id="TechnicalResponse" rows="3"
-                          asp-for="@Model.TechnicalResponse"
-                          placeholder="لم يرد التقني بعد"
-                          readonly disabled></textarea>
-                <span asp-validation-for="@Model.TechnicalResponse"></span>
-            </div>
-        }
-
-
-        <div class="mt-3">
-            <label>
-                الصورة المرفقة
-            </label>
-
-            <div>
-                <img src='@Url.Action("GetImage", new {imageName = Model.TicketImageAttachmentPath})'
-                     class="mx-5 mb-5"
-                     style="width: 50%;"
-                     alt='بلا مرفقات' />
-            </div>
-        </div>
-        <a class="btn btn-primary mt-4" asp-action="TicketsView" asp-route-section='@Model.SectionId'>ارجع للواجهة</a>
-        @if(User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
-        {
-            <button type="submit" class="btn btn-info mt-4">حدّث التذكرة</button>
-        }
-
-        @if (User.IsSectionAdmin() || User.IsUser())
-        {
-            <a  onclick="SwalAlert()" class="btn btn-danger mt-4">حذف</a>
-
-        }
     </div>
 
-</form>
+    @if (User.GetUserId() == Model.TechnicalIdentityUserId || User.IsUser())
+    {
+        <script>
+
+
+
+
+            $(document).ready(function () {
+
+                var chatBox = document.getElementById("chat-box");
+
+                // وظيفة للتمرير إلى الأسفل
+                function scrollToBottom() {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                // مراقبة تغييرات DOM
+                var observer = new MutationObserver(function (mutationsList, observer) {
+                    scrollToBottom(); // عند حدوث أي تغيير، نمرر للأسفل
+                });
+
+                // إعداد المراقب على chat-box
+                observer.observe(chatBox, { childList: true, subtree: true });
+
+                // تمرير للأسفل عند تحميل الصفحة
+                scrollToBottom();
+
+                $('#send-message-btn').on('click', function (e) {
+                    e.preventDefault(); // منع إعادة تحميل الصفحة
+
+                    // جمع البيانات في FormData
+                    var formData = new FormData($('#message-form')[0]);
+
+                    $.ajax({
+                        url: '@Url.Action("SendMessage")', // الرابط للإجراء في السيرفر
+                        method: 'POST',
+                        data: formData,
+                        processData: false, // تعطيل معالجة البيانات
+                        contentType: false, // تعطيل ضبط نوع المحتوى التلقائي
+                        success: function (response) {
+                            location.reload();
+                            $('input[name="Message"]').val('');
+                        },
+                        error: function (e) {
+                            var errorMessage = e.responseJSON.message
+                            Swal.fire({
+                                title: "خطأ!",
+                                text: errorMessage,
+                                icon: "error",
+                            });
+                        }
+                    });
+                });
+            });
+        </script>
+    }
+
+
+
 
 
 
     <script>
 
-        function SwalAlert() {
-            Swal.fire({
-                title: "متأكد؟",
-                text: "لا تراجع بعد هذا!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                cancelButtonText: "ألغ",
-                confirmButtonText: "نعم، احذفها!"
-            }).then((result) => {
-                if (result.isConfirmed) {
+        const imgInput = document.getElementById("image");
+        const imgContainer = document.getElementById("img-container");
+        const imgRemoveBtn = document.getElementById("removeImage");
+        imgInput.addEventListener("change", () => {
+            if (imgInput.files && imgInput.files[0]) {
 
-                    fetch(
-                        window.location.origin + "/Home/Home/Delete?Id=@Model.Id",
-                        {
-                            method: "POST",
-                            headers:
-                            {
-                                "Content-Type": "application/json"
 
-                            },
-                            body: JSON.stringify({ Id: @Model.Id})
-                        }
-                    )
-                    .then(response => { 
-                    
-                        if (response.ok) {
-
-                          window.location.href = window.location.origin + '/Home/Home/TicketsView?section=@Model.SectionId';
-
-                        }
-                        else
-                        {
-                            throw new Error("خطأ أثناء الحذف")
-                        }
-                    
-                    })
-                    
-                    .catch(error => { 
-                    
-                        Swal.fire({
-                            title: "حصل خطأ!",
-                            text: "لم تحذف التذكرة.",
-                            icon: "error",
-                            footer: "<a href='#' class='text-info'>تواصل معنا</a>"
-                        });
-                    
-                    })
-                
-                   
-
-                    
+                if (imgContainer.classList.contains("d-none") )
+                {
+                    imgContainer.classList.remove("d-none");
                 }
+                if (imgRemoveBtn.classList.contains("d-none")) {
+
+                    imgRemoveBtn.classList.remove("d-none");
+                }
+
+                if (!document.getElementById("addImage").classList.contains("d-none")) {
+                    document.getElementById("addImage").classList.add("d-none");
+                }
+
+
+
+                // إنشاء رابط مؤقت للصورة
+                const imageUrl = URL.createObjectURL(imgInput.files[0]);
+
+                // تعيين الصورة كخلفية للعنصر
+                imgContainer.style.backgroundImage = `url(${imageUrl})`;
+
+
+
+
+
+            }
+        });
+
+
+            imgRemoveBtn.addEventListener("click", () => {
+
+            imgInput.value = "";
+
+
+            if (!imgContainer.classList.contains("d-none")) {
+                imgContainer.classList.add("d-none");
+            }
+            if (!imgRemoveBtn.classList.contains("d-none")) {
+
+                imgRemoveBtn.classList.add("d-none");
+            }
+
+            if (document.getElementById("addImage").classList.contains("d-none")) {
+                document.getElementById("addImage").classList.remove("d-none");
+            }
+
+
+
+
             });
-        }
-           
-        
+
+
+            function SwalAlert() {
+                Swal.fire({
+                    title: "متأكد؟",
+                    text: "لا تراجع بعد هذا!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    cancelButtonText: "ألغ",
+                    confirmButtonText: "نعم، احذفها!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(
+                            window.location.origin + "/Home/Home/Delete?Id=@Model.Id",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ Id: @Model.Id})
+                            }
+                        )
+                            .then(response => {
+                                if (response.ok) {
+                                    window.location.href = window.location.origin + '/Home/Home/TicketsView?section=@Model.SectionId';
+                                } else {
+                                    throw new Error("خطأ أثناء الحذف")
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    title: "حصل خطأ!",
+                                    text: "لم تحذف التذكرة.",
+                                    icon: "error",
+                                    footer: "<a href='#' class='text-info'>تواصل معنا</a>"
+                                });
+                            });
+                    }
+                });
+            }
+
+
+            function swalimage(imgpath, message, alt)
+            {
+                
+
+                
+
+            Swal.fire({
+
+                text: message,
+                imageUrl: '@Url.Action("GetImage")' + '?imageName=' + encodeURIComponent(imgpath),
+
+                imageAlt: alt,
+                confirmButtonText: "طيب"
+            });
+
+
+            }
     </script>
-
-
-
+</div>

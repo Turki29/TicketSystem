@@ -502,23 +502,24 @@ namespace TicketSystem.Areas.Home.Controllers
             else { return true; }
         }
 
-        public IActionResult SendMessage(int TicketId, string Message)
+        public IActionResult SendMessage(int TicketId, string Message, string isPrivate, IFormFile image)
         {
 
-            
 
-            if (string.IsNullOrEmpty(Message)) return NotFound();
+
+            if (string.IsNullOrEmpty(Message) && image == null) return BadRequest(new { Message = "الرسالة فارغة" });
 
             TicketResponse ticketResponse = new TicketResponse();
 
-            
-            
-            Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == TicketId);
-            if (ticket == null) return NotFound();
 
-            if(User.GetUserId() != ticket.TechnicalIdentityUserId && User.GetUserId() != ticket.SenderIdentityUserId) return NotFound();
-            
-            if(User.GetUserId() == ticket.TechnicalIdentityUserId)
+
+            Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == TicketId);
+            if (ticket == null) return BadRequest(new { Message = "ما وجدنا التذكرة" });
+            if (ticket.ClosedAt != null) return BadRequest(new { Message = "التذكرة مغلقة" });
+
+            if (User.GetUserId() != ticket.TechnicalIdentityUserId && User.GetUserId() != ticket.SenderIdentityUserId) return NotFound();
+
+            if (User.GetUserId() == ticket.TechnicalIdentityUserId)
             {
                 ticket.UnresponsedMessage = false;
             }
@@ -532,12 +533,51 @@ namespace TicketSystem.Areas.Home.Controllers
             ticketResponse.SenderId = User.GetUserId();
             ticketResponse.Message = Message;
             ticketResponse.DateSent = DateTime.Now;
-            
+
+            if (image != null)
+            {
+
+                try
+                {
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+
+
+
+
+                    var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Ticket_Attachment_Images");
+                    Directory.CreateDirectory(uploadPath);
+
+                    var filePath = Path.Combine(uploadPath, fileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        image.CopyTo(fileStream);
+                    }
+                    ticketResponse.AttachmentPath = fileName;
+                }
+                catch (Exception e)
+                {
+
+                }
+
+            }
+
+
+
+            if (User.IsUser())
+            {
+                ticketResponse.invisibleForCustomer = false;
+            }
+            else
+            {
+                ticketResponse.invisibleForCustomer = "on" == isPrivate ? true : false;
+            }
+
 
             _db.TicketResponses.Add(ticketResponse);
             _db.SaveChanges();
             TempData["success"] = "أرسلت رسالتك";
-            
+
             return Ok();
         }
 

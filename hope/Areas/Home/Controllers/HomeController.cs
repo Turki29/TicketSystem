@@ -242,7 +242,7 @@ namespace TicketSystem.Areas.Home.Controllers
             
 
             Ticket ticket = _db.Tickets
-               .Include(u => u.SendeIdentityUser)
+               .Include(u => u.SenderIdentityUser)
                .Include(u => u.Section)
                .FirstOrDefault(u => u.Id == Id);
 
@@ -252,7 +252,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
 
-
+            
 
             // ADMIN
             if ((User.IsSectionAdmin() && IsCurrentUserInSection(ticket.SectionId)) || User.IsSystemAdmin())
@@ -275,7 +275,7 @@ namespace TicketSystem.Areas.Home.Controllers
             }
 
             // USER
-            if (User.GetUserId() == ticket.SenderIdentityUserId) return View(ticket); 
+            return View(ticket); 
             
             
             
@@ -326,8 +326,8 @@ namespace TicketSystem.Areas.Home.Controllers
                 dbTicket.RelativeWeight = ticket.RelativeWeight;
 
                 // قسم التذكرة
+                if (ticket.SectionId == 4) throw new Exception("قسم غير مستعمل");
                 dbTicket.SectionId = ticket.SectionId;
-
             }
 
             if(User.GetUserId() == dbTicket.TechnicalIdentityUserId || User.IsSystemAdmin())
@@ -457,7 +457,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
 
-        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin)]
+        [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin + "," + StaticData.Role_Technician)]
         public IActionResult Assign(int id, string techId)
         {
             

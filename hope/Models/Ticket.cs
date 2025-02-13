@@ -49,7 +49,7 @@ namespace TicketSystem.Models
         public string SenderIdentityUserId { get; set; }
         [ForeignKey("SenderIdentityUserId")]
         [ValidateNever]
-        public IdentityUser SendeIdentityUser { get; set; }
+        public IdentityUser SenderIdentityUser { get; set; }
 
         public string? TechnicalIdentityUserId { get; set; }
         [ForeignKey("TechnicalIdentityUserId ")]

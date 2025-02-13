@@ -86,18 +86,16 @@
                         </div>
 
                         <div class="my-3 d-flex flex-wrap fs-6">
-                            @if(departmentUserViewModel.Sections.Count() == 0)
-                            {
-                                <a asp-action="AddUser" asp-controller="Section" class="btn btn-info text-white rounded-1 p-2 mx-1">
-                                    +
-                                </a>
-                            }
+                            
                             @foreach (string sectionn in departmentUserViewModel.Sections)
                             {
                                 <a asp-action="RemoveFromSection"  asp-route-Id="@departmentUserViewModel.Id" asp-route-Section="@sectionn" class="btn btn-info text-white rounded-1 p-1 mx-1">
                                     × @sectionn 
                                 </a>
                             }
+                        <a asp-action="AddUser" asp-controller="Section" class="btn btn-info text-white rounded-1 p-2 mx-1">
+                            +
+                        </a>
                         </div>
 
                     @if (departmentUserViewModel.Role == StaticData.Role_Technician)

@@ -37,7 +37,7 @@ namespace TicketSystem.Models
         public byte RelativeWeight { get; set; } = 1;
 
 
-        // هل هناك رسالة لم يرد عليها؟
+        // هل لم يرد عليها؟
         public bool UnresponsedMessage { get; set; }
 
         /// التقني القائم عليها 

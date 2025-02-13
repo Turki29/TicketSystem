@@ -104,7 +104,7 @@ namespace TicketSystem.Areas.Home.Controllers
             // SECTION ADMIN AND SYSTEM ADMIN VIEW
             if (User.IsSectionAdmin() || User.IsSystemAdmin())
             {
-                ticketList = _db.Tickets.Include(u => u.TechnicalApplicationUser)
+                ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                   .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
 
                 return View(ticketList);
@@ -118,8 +118,8 @@ namespace TicketSystem.Areas.Home.Controllers
                 return View(ticketList);
             }
 
-            ticketList = _db.Tickets.Include(u => u.TechnicalApplicationUser)
-                    .Where(u => u.SenderApplicationUserId == User.GetUserId() && u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
+            ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
+                    .Where(u => u.SenderIdentityUserId == User.GetUserId() && u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
             return View(ticketList);
 
         }
@@ -130,11 +130,11 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if(string.IsNullOrEmpty(filter))
             {
-                ticketList = _db.Tickets.Include(u => u.TechnicalApplicationUser)
+                ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                                   .Where(u =>
                                   u.SectionId == section 
                                   &&
-                                  (u.TechnicalApplicationUserId == User.GetUserId() || u.TechnicalApplicationUserId == null)
+                                  (u.TechnicalIdentityUserId == User.GetUserId() || u.TechnicalIdentityUserId == null)
                                   &&
                                   u.Status.ToLower() == status.ToLower()
                                   &&
@@ -144,11 +144,11 @@ namespace TicketSystem.Areas.Home.Controllers
             }
             else if(filter.ToLower() == "notassigned")
             {
-                ticketList =  _db.Tickets.Include(u => u.TechnicalApplicationUser)
+                ticketList =  _db.Tickets.Include(u => u.TechnicalIdentityUser)
                                   .Where(u =>
                                    u.SectionId == section
                                   &&
-                                  ( u.TechnicalApplicationUserId == null) 
+                                  ( u.TechnicalIdentityUserId == null) 
                                   && 
                                   u.Status.ToLower() == status.ToLower() 
                                   && 
@@ -157,11 +157,11 @@ namespace TicketSystem.Areas.Home.Controllers
             }
             else if (filter.ToLower() == "techtickets")
             {
-                ticketList = _db.Tickets.Include(u => u.TechnicalApplicationUser)
+                ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                       .Where(u =>
                        u.SectionId == section
                        &&
-                      (u.TechnicalApplicationUserId == User.GetUserId())
+                      (u.TechnicalIdentityUserId == User.GetUserId())
                       && 
                       u.Status.ToLower() == status.ToLower()
                       && 
@@ -197,7 +197,7 @@ namespace TicketSystem.Areas.Home.Controllers
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            ticket.SenderApplicationUserId = userId;
+            ticket.SenderIdentityUserId = userId;
 
             if(file != null)
             {
@@ -242,7 +242,7 @@ namespace TicketSystem.Areas.Home.Controllers
             
 
             Ticket ticket = _db.Tickets
-               .Include(u => u.SenderApplicationUser)
+               .Include(u => u.SendeIdentityUser)
                .Include(u => u.Section)
                .FirstOrDefault(u => u.Id == Id);
 
@@ -266,16 +266,16 @@ namespace TicketSystem.Areas.Home.Controllers
                 if(IsCurrentUserInSection(ticket.SectionId)
                     &&
                    (
-                    ticket.TechnicalApplicationUserId == User.GetUserId() 
+                    ticket.TechnicalIdentityUserId == User.GetUserId() 
                     || 
-                    ticket.TechnicalApplicationUserId == null)
+                    ticket.TechnicalIdentityUserId == null)
                     // نهاية الشرط
                   )
                 return View(ticket);
             }
 
             // USER
-            if (User.GetUserId() == ticket.SenderApplicationUserId) return View(ticket); 
+            if (User.GetUserId() == ticket.SenderIdentityUserId) return View(ticket); 
             
             
             
@@ -303,7 +303,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
             //تحديث الحالة
-            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalApplicationUserId || User.IsSystemAdmin())
+            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
                 if (ticket.Status.ToLower() == "closed")
                 {
@@ -319,7 +319,7 @@ namespace TicketSystem.Areas.Home.Controllers
             if (User.IsSectionAdmin() || User.IsSystemAdmin())
             {
                 // تغيير القائم على التذكرة إذا كان التقني في القسم
-                if(IsThisUserIdInSection(ticket.TechnicalApplicationUserId, ticket.SectionId)) dbTicket.TechnicalApplicationUserId = ticket.TechnicalApplicationUserId;
+                if(IsThisUserIdInSection(ticket.TechnicalIdentityUserId, ticket.SectionId)) dbTicket.TechnicalIdentityUserId = ticket.TechnicalIdentityUserId;
 
                 // وزن التذكرة
                
@@ -330,7 +330,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             }
 
-            if(User.GetUserId() == dbTicket.TechnicalApplicationUserId || User.IsSystemAdmin())
+            if(User.GetUserId() == dbTicket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
 
                 if(!string.IsNullOrEmpty(ticket.TechnicalResponse))
@@ -386,7 +386,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 users = users.Where(u => u.SectionId == sectionId).ToList();
             }
 
-            ApplicationUser ApplicationUser;
+            IdentityUser ApplicationUser;
             technicalsVM.Technicians = new List<SelectListItem>();
 
 
@@ -436,7 +436,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == Id);
 
-            if (ticket == null || (User.IsUser() && ticket.SenderApplicationUserId != User.GetUserId()))
+            if (ticket == null || (User.IsUser() && ticket.SenderIdentityUserId != User.GetUserId()))
             {
                 return NotFound();
             }
@@ -465,7 +465,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == id);
 
-            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == techId);
+            IdentityUser user = _db.Users.FirstOrDefault(u => u.Id == techId);
 
 
             if(user == null) return Redirect("/Home/Home/Error");
@@ -473,7 +473,7 @@ namespace TicketSystem.Areas.Home.Controllers
             bool TechIsntInSection= _db.UserSections.FirstOrDefault(u => u.UserId == user.Id && u.SectionId == ticket.SectionId) == null;
             if (TechIsntInSection) return Redirect("/Home/Home/Error");
 
-            ticket.TechnicalApplicationUserId = techId;
+            ticket.TechnicalIdentityUserId = techId;
             _db.SaveChanges();
 
             return RedirectToAction(nameof(Index));
@@ -516,9 +516,9 @@ namespace TicketSystem.Areas.Home.Controllers
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == TicketId);
             if (ticket == null) return NotFound();
 
-            if(User.GetUserId() != ticket.TechnicalApplicationUserId && User.GetUserId() != ticket.SenderApplicationUserId) return NotFound();
+            if(User.GetUserId() != ticket.TechnicalIdentityUserId && User.GetUserId() != ticket.SenderIdentityUserId) return NotFound();
             
-            if(User.GetUserId() == ticket.TechnicalApplicationUserId)
+            if(User.GetUserId() == ticket.TechnicalIdentityUserId)
             {
                 ticket.UnresponsedMessage = false;
             }

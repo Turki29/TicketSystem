@@ -13,7 +13,7 @@ namespace TicketSystem.Models
         public string UserId { get; set; }
         [ForeignKey("UserId")]
         [ValidateNever]
-        public ApplicationUser User { get; set; }
+        public IdentityUser User { get; set; }
 
         public int SectionId { get; set; }
         [ForeignKey("SectionId")]

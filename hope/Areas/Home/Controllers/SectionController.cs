@@ -111,7 +111,7 @@ namespace TicketSystem.Areas.Home.Controllers
             Section section = _db.Sections.FirstOrDefault(u => u.Id == usersection.SectionId);
             if (section == null) return Redirect("/Home/Home/Error");
 
-            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == usersection.UserId);
+            IdentityUser user = _db.Users.FirstOrDefault(u => u.Id == usersection.UserId);
             if (user == null) return Redirect("/Home/Home/Error");
 
              usersectionChecker = _db.UserSections.FirstOrDefault(u => u.UserId == usersection.UserId && u.SectionId == usersection.SectionId);

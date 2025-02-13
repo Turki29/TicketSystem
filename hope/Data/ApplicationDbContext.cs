@@ -9,7 +9,7 @@ using TicketSystem.Models;
 
 namespace TicketSystem.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
 
 
@@ -20,7 +20,7 @@ namespace TicketSystem.Data
 
         }
 
-        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        
         public DbSet<Ticket> Tickets { get; set; }
         [ValidateNever]
         public DbSet<Section> Sections { get; set; }

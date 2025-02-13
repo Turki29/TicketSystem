@@ -46,15 +46,15 @@ namespace TicketSystem.Models
 
         /// مرسل التذكرة
         [Required]
-        public string SenderApplicationUserId { get; set; }
-        [ForeignKey("SenderApplicationUserId")]
+        public string SenderIdentityUserId { get; set; }
+        [ForeignKey("SenderIdentityUserId")]
         [ValidateNever]
-        public ApplicationUser SenderApplicationUser { get; set; }
+        public IdentityUser SendeIdentityUser { get; set; }
 
-        public string? TechnicalApplicationUserId { get; set; }
-        [ForeignKey("TechnicalApplicationUserId ")]
+        public string? TechnicalIdentityUserId { get; set; }
+        [ForeignKey("TechnicalIdentityUserId ")]
         [ValidateNever]
-        public ApplicationUser TechnicalApplicationUser { get; set; }
+        public IdentityUser TechnicalIdentityUser { get; set; }
 
         
 

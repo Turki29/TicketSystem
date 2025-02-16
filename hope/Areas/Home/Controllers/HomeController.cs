@@ -300,7 +300,9 @@ namespace TicketSystem.Areas.Home.Controllers
             //يتأكد إذا المستخدم عنده صلاحية على التذكرة أو لا
             //if (!IsCurrentUserInSection(ticket.SectionId)) return Redirect("/Home/Error");
 
-
+            //0010 USER1
+            //0100 READ
+            //0000 REFUSE
 
             //تحديث الحالة
             if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId || User.IsSystemAdmin())
@@ -326,7 +328,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 dbTicket.RelativeWeight = ticket.RelativeWeight;
 
                 // قسم التذكرة
-                if (ticket.SectionId == 4) throw new Exception("قسم غير مستعمل");
+                if (ticket.SectionId < 1 || ticket.SectionId > 3) return Redirect("/Home/Home/Error");
                 dbTicket.SectionId = ticket.SectionId;
             }
 

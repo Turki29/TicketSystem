@@ -45,12 +45,20 @@
                     }
 
                     <div class="mt-3">
+
+
                         <label> قسم التذكرة</label>
-                        <input id="sections" type="text"
-                                class="form-control"
-                                asp-for="@Model.SectionId"/>
-                        
+                        <select id="sections"
+                                class="form-select"
+                                asp-for="@Model.SectionId">
+                        </select>
+
                     </div>
+
+
+                    <script>
+                        $("#sections").load("/Home/Home/PartialSections?selectedSection=@Model.SectionId")
+                    </script>
 
                     @if (User.IsSectionAdmin() || User.GetUserId() == Model.TechnicalIdentityUserId)
 

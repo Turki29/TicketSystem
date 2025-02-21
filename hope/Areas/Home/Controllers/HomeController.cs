@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using TicketSystem.Data;
+using TicketSystem.Migrations;
 using TicketSystem.Models;
 using TicketSystem.Models.ViewModels;
 using Utility;
@@ -29,15 +30,12 @@ namespace TicketSystem.Areas.Home.Controllers
             _db = db;
         }
 
+        // تظهر لك الأقسام المسموح لك ولوجها
         public IActionResult Index()
         {
-
             
 
-            
-            
-
-
+            UserSections UserSection = _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId());
 
 
             IEnumerable<Section> sectionsList;
@@ -71,7 +69,13 @@ namespace TicketSystem.Areas.Home.Controllers
 
         public IActionResult AddSection(string sectionName)
         {
-            if(string.IsNullOrEmpty(sectionName)) return RedirectToAction(nameof(Index));
+
+            if (string.IsNullOrEmpty(sectionName)) return RedirectToAction(nameof(Index));
+
+            if (!(_db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId()).Role.Name == StaticData.Role_System_Admin))
+            {
+                return Redirect("/Home/Home/Error");
+            }
 
             Section section = new Section();
             section.Name = sectionName;
@@ -80,51 +84,74 @@ namespace TicketSystem.Areas.Home.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        // دالة تظهر لك التذاكر على حسب قسمك وصلاحيتك
         public IActionResult TicketsView(int section,string? status = "new", string? filter = "")
         {
 
 
-            if(!(User.IsUser() || User.IsSystemAdmin()))
-            {
-                if (section == 4 || section < 1 || !IsCurrentUserInSection(section)) return NotFound();
-            }
-
-            IEnumerable<Ticket> ticketList = Enumerable.Empty<Ticket>(); ;
-
+            
+            if (section > 3 || section < 1) return NotFound();
 
             
 
-            ViewData["section"] = section.ToString();
-            ViewData["sectionName"] = _db.Sections.FirstOrDefault(u => u.Id == section);
+
+            IEnumerable<Ticket> ticketList = Enumerable.Empty<Ticket>(); ;
 
            
 
 
-            // SECTION ADMIN AND SYSTEM ADMIN VIEW
-            if (User.IsSectionAdmin() || User.IsSystemAdmin())
+            ViewData["section"] = section.ToString();
+            ViewData["sectionName"] = _db.Sections.FirstOrDefault(u => u.Id == section);
+            if (User.IsSystemAdmin()) // SYSTEM ADMIN VIEW
             {
                 ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
-                  .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
+                      .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
 
                 return View(ticketList);
+
+
             }
 
-            // TECH VIEW
-            if(User.IsTechnician())
+            UserSections UserSection = _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == section);
+
+            
+            
+            if (UserSection == null) // USER VIEW
             {
-                GetTechTickets(ref ticketList,section,status,filter);
-                // تجيب تذاكر التقني و التذاكر اللي ما مسكها أحد
+                ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
+                                     .Where(u => u.SenderIdentityUserId == User.GetUserId() && u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
                 return View(ticketList);
             }
 
-            ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
-                    .Where(u => u.SenderIdentityUserId == User.GetUserId() && u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
-            return View(ticketList);
+
+            switch(UserSection.Role.Name) 
+            {
+
+                
+                case StaticData.Role_Section_Admin:
+
+                    ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
+                      .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
+
+                    return View(ticketList);
+                case StaticData.Role_Technician:
+                default:
+                    GetTechTickets(ref ticketList, section, status, filter);
+                    // تجيب تذاكر التقني و التذاكر اللي ما مسكها أحد
+                    return View(ticketList);
+                
+            }
+
+
+           
+ 
+
+           
 
         }
 
-        public void GetTechTickets(ref IEnumerable<Ticket> ticketList ,int section,string status,string filter)
+        //  TicketsView()هذه دالة تابعة لـ
+        private void GetTechTickets(ref IEnumerable<Ticket> ticketList ,int section,string status,string filter)
         {
 
 
@@ -194,10 +221,8 @@ namespace TicketSystem.Areas.Home.Controllers
         {
             
 
-            var claimsIdentity = (ClaimsIdentity)User.Identity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
-
-            ticket.SenderIdentityUserId = userId;
+            
+            ticket.SenderIdentityUserId = User.GetUserId();
 
             if(file != null)
             {
@@ -246,42 +271,38 @@ namespace TicketSystem.Areas.Home.Controllers
                .Include(u => u.Section)
                .FirstOrDefault(u => u.Id == Id);
 
+            
 
             // IS TICKET NULL?
-            if (ticket == null) return NotFound();
+            if (ticket == null) return Redirect("/Home/Home/Error");
 
+            UserSections userSection = _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
+
+
+            
+            
+            if(User.IsSystemAdmin())
+            {
+                ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+                return View(ticket);
+            }
+
+                // USER
+            if (userSection == null )
+            {
+                if (ticket.SenderIdentityUserId == User.GetUserId())
+                {
+                    ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+                    return View(ticket);
+                }
+                else return Redirect("/Home/Home/Error");
+
+            }
+            
             ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
-
-            
-
-            // ADMIN
-            if ((User.IsSectionAdmin() && IsCurrentUserInSection(ticket.SectionId)) || User.IsSystemAdmin())
-            {
-                return View(ticket);
-            }
-            
-            // TECH
-            if (User.IsTechnician())
-            {
-                if(IsCurrentUserInSection(ticket.SectionId)
-                    &&
-                   (
-                    ticket.TechnicalIdentityUserId == User.GetUserId() 
-                    || 
-                    ticket.TechnicalIdentityUserId == null)
-                    // نهاية الشرط
-                  )
-                return View(ticket);
-            }
-
-            // USER
-            return View(ticket); 
-            
-            
-            
-            return NotFound();
-
-
+            // Section admin and Technical VIEW
+            return View(ticket);
+       
         }
 
 
@@ -290,22 +311,13 @@ namespace TicketSystem.Areas.Home.Controllers
         public IActionResult Details(Ticket ticket)
         {
 
-           
-
-           
-
-
             Ticket dbTicket = _db.Tickets.FirstOrDefault(u => u.Id == ticket.Id);
 
-            //يتأكد إذا المستخدم عنده صلاحية على التذكرة أو لا
-            //if (!IsCurrentUserInSection(ticket.SectionId)) return Redirect("/Home/Error");
-
-            //0010 USER1
-            //0100 READ
-            //0000 REFUSE
+           UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
 
             //تحديث الحالة
-            if(User.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId || User.IsSystemAdmin())
+            // ما نحتاج نتأكد إذا كان التقني بالقسم لأنه لا يتعين إلا وهو بالقسم
+            if (User.IsSystemAdmin() ||userSection.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId)
             {
                 if (ticket.Status.ToLower() == "closed")
                 {
@@ -318,7 +330,7 @@ namespace TicketSystem.Areas.Home.Controllers
             }
 
             int originalSection = dbTicket.SectionId;
-            if (User.IsSectionAdmin() || User.IsSystemAdmin())
+            if (userSection.IsSectionAdmin() || User.IsSystemAdmin())
             {
                 // تغيير القائم على التذكرة إذا كان التقني في القسم
                 if(IsThisUserIdInSection(ticket.TechnicalIdentityUserId, ticket.SectionId)) dbTicket.TechnicalIdentityUserId = ticket.TechnicalIdentityUserId;
@@ -332,6 +344,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 dbTicket.SectionId = ticket.SectionId;
             }
 
+            // ما نحتاج نتأكد إذا كان التقني بالقسم لأنه لا يتعين إلا وهو بالقسم
             if(User.GetUserId() == dbTicket.TechnicalIdentityUserId || User.IsSystemAdmin())
             {
 
@@ -356,56 +369,31 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
         [Authorize(Roles = StaticData.Role_Section_Admin + "," + StaticData.Role_System_Admin)]
+        // لعرض التقنيين select يرجع لك وسم
         public IActionResult PartialAssignedTech(string assignedTicketTech, string section ="")
         {
-            
+            if(!User.IsSystemAdmin())
+            {
+                UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId());
+
+                if (userSection == null) return BadRequest(new { message = "You do not have the permission." });
+            }
 
             TechnicalsVM technicalsVM = new TechnicalsVM() 
             {
-            
                 SelectedTech = assignedTicketTech,
-                
-
             };
 
-            var Role = _db.Roles.FirstOrDefault(u => u.Name == StaticData.Role_Technician);
-            string RoleId = Role.Id;
+            if (string.IsNullOrEmpty(section)) return BadRequest(new { message = "Empty Section Number" });
 
-            var users = _db.UserRoles
-                            .Where(u => u.RoleId == RoleId)
-                            .Join(
-                                _db.UserSections,
-                                userRole => userRole.UserId,
-                                userSection => userSection.UserId,
-                                (userRole, userSection) => new { userSection.UserId, userSection.SectionId }
-                            )
-                            .ToList();
+            int sectionId = Convert.ToInt32(section);
+            if (sectionId  == 4 || sectionId < 1) return BadRequest(new { message = "Invalid Section Number" });
 
-            
-            if (!string.IsNullOrEmpty(section))
-            {
-                int sectionId = Convert.ToInt32(section);
-                users = users.Where(u => u.SectionId == sectionId).ToList();
-            }
-
-            IdentityUser ApplicationUser;
-            technicalsVM.Technicians = new List<SelectListItem>();
-
-
-            foreach (var user in users)
-            {
-                ApplicationUser = _db.Users.FirstOrDefault(u => u.Id == user.UserId);
-                
-                if (ApplicationUser != null)
-                {
-                    technicalsVM.Technicians.Add(new SelectListItem
-                    {
-                        Text = ApplicationUser.UserName, // Display name
-                        Value = ApplicationUser.Id       // User ID as the value // ** ليش كذا خلهم تقني لا تخليهم عنصر
-                    });
-                }
-            }
-
+            technicalsVM.Technicians = _db.UserSections
+                .Include(u=> u.Role).Include(u => u.User)
+                .Where(u=> u.Role.Name == StaticData.Role_Technician && u.SectionId == sectionId)
+                .Select(u => new SelectListItem {Text = u.User.Email, Value = u.UserId })
+                .ToList();
 
             return PartialView("_UserRoles", technicalsVM);
         }
@@ -438,13 +426,22 @@ namespace TicketSystem.Areas.Home.Controllers
 
             Ticket ticket = _db.Tickets.FirstOrDefault(u => u.Id == Id);
 
-            if (ticket == null || (User.IsUser() && ticket.SenderIdentityUserId != User.GetUserId()))
+            if (ticket == null ) return BadRequest(new { message = "ticket not found"});
+
+            if(User.IsSystemAdmin())
             {
-                return NotFound();
+                _db.Tickets.Remove(ticket);
+                _db.SaveChanges();
             }
 
+            UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId );
+
             
-            
+            if (userSection == null && User.GetUserId() != ticket.SenderIdentityUserId) return BadRequest(new { message = "ticket not found in your tickets" });
+
+            if(userSection.IsTechnical()) return BadRequest(new { message = "you do not have the permission" });
+
+
             _db.Tickets.Remove(ticket);
             _db.SaveChanges();
             
@@ -472,8 +469,8 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if(user == null) return Redirect("/Home/Home/Error");
 
-            bool TechIsntInSection= _db.UserSections.FirstOrDefault(u => u.UserId == user.Id && u.SectionId == ticket.SectionId) == null;
-            if (TechIsntInSection) return Redirect("/Home/Home/Error");
+            bool TechIsInSection= _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == user.Id && u.SectionId == ticket.SectionId && u.Role.Name == StaticData.Role_Technician) != null;
+            if (!TechIsInSection) return Redirect("/Home/Home/Error");
 
             ticket.TechnicalIdentityUserId = techId;
             _db.SaveChanges();
@@ -484,7 +481,7 @@ namespace TicketSystem.Areas.Home.Controllers
         }
 
 
-        public bool IsCurrentUserInSection(int sectionId)
+        private bool IsCurrentUserInSection(int sectionId)
         {
             if(User.IsSystemAdmin())
             {
@@ -492,8 +489,7 @@ namespace TicketSystem.Areas.Home.Controllers
             }
             UserSections queryUserSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == sectionId);
 
-            if (queryUserSection == null) { return false; }
-            else { return true; }
+            return queryUserSection != null;
         }
 
         public bool IsThisUserIdInSection(string userId,int sectionId)
@@ -511,7 +507,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if (string.IsNullOrEmpty(Message) && image == null) return BadRequest(new { Message = "الرسالة فارغة" });
 
-            TicketResponse ticketResponse = new TicketResponse();
+           
 
 
 
@@ -529,6 +525,8 @@ namespace TicketSystem.Areas.Home.Controllers
             {
                 ticket.UnresponsedMessage = true;
             }
+
+            TicketResponse ticketResponse = new TicketResponse();
 
             ticketResponse.SenderName = User.GetUserEmail();
             ticketResponse.TicketId = ticket.Id;
@@ -564,15 +562,15 @@ namespace TicketSystem.Areas.Home.Controllers
 
             }
 
+            UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
 
-
-            if (User.IsUser())
+            if (userSection == null)
             {
                 ticketResponse.invisibleForCustomer = false;
             }
             else
             {
-                ticketResponse.invisibleForCustomer = "on" == isPrivate ? true : false;
+                ticketResponse.invisibleForCustomer = "on" == isPrivate ? true : false; // checkbox value is either on or off
             }
 
 

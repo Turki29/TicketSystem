@@ -1,0 +1,10 @@
+﻿@model List<IdentityRole>
+
+    <option selected disabled>
+        -اختر صلاحية-
+    </option>
+    @foreach(IdentityRole item in Model)
+    {
+        <option value="@item.Id">@StaticData.GetArabicRole(item.Name)</option>
+    }
+    

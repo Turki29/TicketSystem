@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using TicketSystem.Models;
+using System.Security;
+using TicketSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();// عشان إنشاء الحساب والتسجيل
+builder.Services.AddScoped<IPermissions, Permissions>(); // نظام الصلاحيات
 var connString =Environment.GetEnvironmentVariable("TICKET_SYS_DB_KEY");
 if(string.IsNullOrEmpty(connString))
 {

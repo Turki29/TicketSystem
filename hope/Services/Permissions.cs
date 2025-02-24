@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Security;
 using System.Security.Claims;
 using TicketSystem.Data;
 using TicketSystem.Models;
@@ -37,6 +38,15 @@ namespace TicketSystem.Services
             return HasThisPermission(User, sectionId, StaticData.Role_Technician);
         }
 
+        public bool IsDepartment(ClaimsPrincipal User, int sectionId)
+        {
+            if (User.IsSystemAdmin()) return true;
+            var hasAccess = _db.UserSections
+                .Where(u => u.UserId == User.GetUserId() && u.SectionId == sectionId)
+                .Select(u => u.Role.Name)
+                .Any(roleName => roleName == StaticData.Role_Technician || roleName == StaticData.Role_Section_Admin);
+            return hasAccess;
+        }
         public bool IsUser(ClaimsPrincipal User, int sectionId)
         {
             if (User.IsSystemAdmin()) return false;

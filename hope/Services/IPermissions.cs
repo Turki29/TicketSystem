@@ -7,6 +7,7 @@ namespace TicketSystem.Services
 
         bool IsSectionAdmin(ClaimsPrincipal User, int sectionId);
         bool IsTechnical(ClaimsPrincipal User, int sectionId);
+        public bool IsDepartment(ClaimsPrincipal User, int sectionId);
         bool IsUser(ClaimsPrincipal User, int sectionId);
 
     }

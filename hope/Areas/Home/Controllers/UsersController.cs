@@ -79,7 +79,7 @@ namespace TicketSystem.Areas.Home.Controllers
 
             departmentUsersVMList.OrderBy(u => u.Role);
 
-
+            ViewData["role"] = StaticData.Role_System_Admin;
             return View(departmentUsersVMList);
         }
 

@@ -35,15 +35,16 @@ namespace TicketSystem.Areas.Home.Controllers
         {
             
 
-            UserSections UserSection = _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId());
+            UserSections UserSection = _db.UserSections.Include(u => u.Role)
+                .FirstOrDefault(u => u.UserId == User.GetUserId());
 
 
             IEnumerable<Section> sectionsList;
 
-            if (!(User.IsUser() || User.IsSystemAdmin()))
+            if (!(UserSection ==null || User.IsSystemAdmin()))
             {
 
-                //List <UserSections> userSection 
+                
                 sectionsList = _db.UserSections
                     .Where(u => u.UserId == User.GetUserId())
                     .Join(_db.Sections,
@@ -57,13 +58,14 @@ namespace TicketSystem.Areas.Home.Controllers
 
 
 
-
+                ViewData["role"] = UserSection.Role.Name;
                 return View(sectionsList);
 
             }
 
             sectionsList = _db.Sections.Where(u => u.Id !=4);
-
+            if (UserSection == null) ViewData["role"] = StaticData.Role_User;
+            else ViewData["role"] = StaticData.Role_System_Admin;
             return View(sectionsList);
         }
 
@@ -92,12 +94,7 @@ namespace TicketSystem.Areas.Home.Controllers
             
             if (section > 3 || section < 1) return NotFound();
 
-            
-
-
             IEnumerable<Ticket> ticketList = Enumerable.Empty<Ticket>(); ;
-
-           
 
 
             ViewData["section"] = section.ToString();
@@ -106,7 +103,7 @@ namespace TicketSystem.Areas.Home.Controllers
             {
                 ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                       .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
-
+                ViewData["role"] = StaticData.Role_System_Admin;
                 return View(ticketList);
 
 
@@ -120,6 +117,7 @@ namespace TicketSystem.Areas.Home.Controllers
             {
                 ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                                      .Where(u => u.SenderIdentityUserId == User.GetUserId() && u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
+                ViewData["role"] = StaticData.Role_User;
                 return View(ticketList);
             }
 
@@ -132,22 +130,16 @@ namespace TicketSystem.Areas.Home.Controllers
 
                     ticketList = _db.Tickets.Include(u => u.TechnicalIdentityUser)
                       .Where(u => u.SectionId == section && u.Status.ToLower() == status.ToLower() && u.IsDeleted == false);
-
+                    ViewData["role"] = StaticData.Role_Section_Admin;
                     return View(ticketList);
                 case StaticData.Role_Technician:
                 default:
                     GetTechTickets(ref ticketList, section, status, filter);
                     // تجيب تذاكر التقني و التذاكر اللي ما مسكها أحد
+                    ViewData["role"] = StaticData.Role_Technician;
                     return View(ticketList);
                 
             }
-
-
-           
- 
-
-           
-
         }
 
         //  TicketsView()هذه دالة تابعة لـ
@@ -203,10 +195,15 @@ namespace TicketSystem.Areas.Home.Controllers
 
         public IActionResult Insert(int section)
         {
+            UserSections userSections = _db.UserSections.Include(u => u.Role)
+                .FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == section);
+            //يتأكد إذا المتسخدم عميل
+            if (userSections != null) return Redirect("/Home/Home/Error");
 
+            // إذا المستخدم عميل
             Ticket ticket = new Ticket();
             ticket.SectionId = section;
-
+            ViewData["role"] = StaticData.Role_User;
             return View(ticket);
         }
         public IActionResult PartialSections(string selectedSection = "")
@@ -276,7 +273,8 @@ namespace TicketSystem.Areas.Home.Controllers
             // IS TICKET NULL?
             if (ticket == null) return Redirect("/Home/Home/Error");
 
-            UserSections userSection = _db.UserSections.Include(u => u.Role).FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
+            UserSections userSection = _db.UserSections.Include(u => u.Role)
+                .FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
 
 
             
@@ -284,6 +282,7 @@ namespace TicketSystem.Areas.Home.Controllers
             if(User.IsSystemAdmin())
             {
                 ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+                ViewData["role"] = StaticData.Role_System_Admin;
                 return View(ticket);
             }
 
@@ -293,6 +292,7 @@ namespace TicketSystem.Areas.Home.Controllers
                 if (ticket.SenderIdentityUserId == User.GetUserId())
                 {
                     ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+                    ViewData["role"] = StaticData.Role_User;
                     return View(ticket);
                 }
                 else return Redirect("/Home/Home/Error");
@@ -300,6 +300,7 @@ namespace TicketSystem.Areas.Home.Controllers
             }
             
             ViewData["MessagesOfTicket"] = _db.TicketResponses.Where(u => u.TicketId == ticket.Id).ToList();
+            ViewData["role"] = userSection.Role.Name;
             // Section admin and Technical VIEW
             return View(ticket);
        
@@ -314,7 +315,7 @@ namespace TicketSystem.Areas.Home.Controllers
             Ticket dbTicket = _db.Tickets.FirstOrDefault(u => u.Id == ticket.Id);
 
            UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId);
-
+            
             //تحديث الحالة
             // ما نحتاج نتأكد إذا كان التقني بالقسم لأنه لا يتعين إلا وهو بالقسم
             if (User.IsSystemAdmin() ||userSection.IsSectionAdmin() || User.GetUserId() == ticket.TechnicalIdentityUserId)

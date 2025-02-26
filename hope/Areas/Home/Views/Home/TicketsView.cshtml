@@ -26,7 +26,7 @@
 
 
 <div class="d-flex justify-content-lg-between m-3" style="flex-wrap: wrap;">
-    @if (User.IsUser())
+    @if (User.IsUser(ViewData["role"]))
     {
 
         
@@ -55,7 +55,7 @@
         
         
         <a class="btn btn-dark m-1" asp-action="TicketsView" asp-route-status="new" asp-route-section="@ViewData["section"]"> كل التذاكر الجديدة</a>
-        @if(User.IsTechnician())
+        @if (User.IsTechnician(ViewData["role"]))
         {
             <a class="btn btn-dark  m-1" asp-action="TicketsView" asp-route-filter="techtickets" asp-route-section="@ViewData["section"]"> التذاكر المسندة لي</a>
             <a class="btn btn-dark  m-1" asp-action="TicketsView" asp-route-filter="notassigned" asp-route-section="@ViewData["section"]"> التذاكر غير المسندة</a>
@@ -74,7 +74,7 @@
     <th>الحالة</th>
     <th>تاريخ الانتهاء</th>
     
-        @if (User.IsDepartment())
+        @if (User.IsDepartment(ViewData["role"]))
         {
         <th>القائم على التذكرة</th>
         }
@@ -95,17 +95,17 @@
 
 
 
-                @if ((User.IsDepartment()) && ticket.TechnicalIdentityUser != null)
+                @if ((User.IsDepartment(ViewData["role"])) && ticket.TechnicalIdentityUser != null)
                  {
                     <td>@ticket.TechnicalIdentityUser.Email</td>
                  }
-                else if (User.IsTechnician())
+                else if (User.IsTechnician(ViewData["role"]))
                 {
                     <td>
                         <a class="btn btn-dark m-1" asp-action="Assign" asp-route-id="@ticket.Id" asp-route-techId="@User.GetUserId()">أسندها إلي</a>
                     </td>
                 }
-                else if (User.IsSectionAdmin())
+                else if (User.IsSectionAdmin(ViewData["role"]))
                 {
                     <td> لم تسند لأحد</td>
                 }
@@ -116,7 +116,7 @@
                     <div class="d-flex flex-lg-wrap ">
                         <a class="btn btn-info m-1 relativee" asp-action="Details" asp-route-Id="@ticket.Id">
                             <i class="bi bi-info-circle-fill"></i>
-                            @if (!User.IsUser() && ticket.UnresponsedMessage == true)
+                            @if (!User.IsUser(ViewData["role"]) && ticket.UnresponsedMessage == true)
                             {
                                 <div class="notify">
                                     رسالة

@@ -20,7 +20,7 @@ namespace Utility
         }
         public static bool IsSectionAdmin(this ClaimsPrincipal user, object role) // أضف اسم القسم
         {
-
+            
             
             return role.ToString() == StaticData.Role_Section_Admin || user.IsSystemAdmin();
             //return user.IsInRole(StaticData.Role_Section_Admin) || user.IsSystemAdmin();

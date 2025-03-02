@@ -18,7 +18,7 @@
                     
                     <label class="m-1"> مرسل التذكرة</label>
                     <input class="form-control" asp-for="@Model.SenderIdentityUser.UserName" readonly disabled />
-                    @if (User.IsSectionAdmin(ViewData["role"]))
+                    @if (User.IsSectionAdmin(ViewData["role"]) )
 
                     {
                         <div class="mt-3">

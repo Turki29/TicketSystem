@@ -431,8 +431,10 @@ namespace TicketSystem.Areas.Home.Controllers
 
             if(User.IsSystemAdmin())
             {
-                _db.Tickets.Remove(ticket);
+                ticket.IsDeleted = true;
                 _db.SaveChanges();
+                TempData["success"] = "حُذفت التذكرة";
+                return Ok();
             }
 
             UserSections userSection = _db.UserSections.FirstOrDefault(u => u.UserId == User.GetUserId() && u.SectionId == ticket.SectionId );
@@ -443,12 +445,9 @@ namespace TicketSystem.Areas.Home.Controllers
             if(userSection.IsTechnical()) return BadRequest(new { message = "you do not have the permission" });
 
 
-            _db.Tickets.Remove(ticket);
+            ticket.IsDeleted = true;
             _db.SaveChanges();
-            
-           
-            
-           
+    
             TempData["success"] = "حُذفت التذكرة";
             return Ok();
         
